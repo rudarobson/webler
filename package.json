@@ -1,0 +1,30 @@
+{
+  "name": "webler",
+  "version": "0.0.1",
+  "description": "Web application assembler",
+  "keywords": [
+    "web",
+    "tool",
+    "assembler"
+  ],
+  "author": "Rudá Robson",
+  "type": "Copyright 2015 Rudá Robson",
+  "bugs": {
+    "url": "https://github.com/rudarobson/webler/issues"
+  },
+  "bin": {
+    "weble": "bin/launcher"
+  },
+  "preferGlobal": true,
+  "dependencies": {
+    "cheerio": "^0.19.0",
+    "clean-css": "^3.2.3",
+    "glob": "^5.0.5",
+    "handlebars": "^3.0.2",
+    "handlebars-layouts": "^2.0.1",
+    "mkdirp": "^0.5.0",
+    "node-sass": "^3.0.0-beta.7",
+    "uglify-js": "^2.4.20",
+    "yargs": "^3.7.2"
+  }
+}

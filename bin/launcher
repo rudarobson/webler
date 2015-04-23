@@ -1,0 +1,26 @@
+#! /usr/bin/env node
+
+var webler = require('./webler.js');
+var yargs = require('yargs')
+	.usage('Usage: weble src dst')
+	.help('h')
+	.alias('h', 'help')
+	.option('s', {
+		alias: 'srcRoot',
+		describe: 'The directory to search when an absolute path is processed',
+		type: 'string'
+	})
+	.option('d', {
+		alias: 'dstRoot',
+		describe: 'The directory to write files when an absolute path is processed',
+		type: 'string'
+	})
+	.demand(2)
+	.showHelpOnFail(false, "Specify --help for available options")
+	.epilog('Copyright 2015 Rudá Robson')
+	.argv;
+
+
+if (argv.help) {
+	console.log(yargs.help());
+}

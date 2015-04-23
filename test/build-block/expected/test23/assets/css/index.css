@@ -1,0 +1,10 @@
+div {
+  background-color: blue; }
+  div span {
+    background-color: blue; }
+
+span {
+  background-color: blue; }
+  span button {
+    background-color: blue;
+    padding: 12px; }
