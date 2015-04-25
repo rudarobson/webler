@@ -11,6 +11,13 @@ function setTestsOptions(testsPath, test_resultsPath, expectedPath) {
 	}
 
 	options.test3.layoutsExt = '.layout';
+
+	for (var i in options) {
+		options[i] = {
+			handlebars: options[i]
+		};
+	}
+	
 	return options;
 }
 

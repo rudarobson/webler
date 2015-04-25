@@ -23,10 +23,10 @@ function test(assert, tests, exec) {
 }
 
 module.exports.testBuildBlock = function(assert) {
-	var tests = require('./nodeunit/buildBlock')();
+	var tests = require('./nodeunit/build')();
 
 	assert.expect(18);
-	test(assert, tests, ['build-block']);
+	test(assert, tests, ['build']);
 	assert.done();
 };
 

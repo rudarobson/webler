@@ -19,14 +19,20 @@ function setTestsOptions(testsPath, test_resultsPath, expectedPath) {
 		dstRoot: path.join(test_resultsPath, 'test23/'),
 		types: ['sass']
 	};
+
+	for (var i in options) {
+		options[i] = {
+			build: options[i]
+		};
+	}
 	return options;
 }
 
 
 function setTests() {
-	var testsPath = 'build-block/tests';
-	var expectedPath = 'build-block/expected';
-	var test_resultsPath = 'build-block/tests_results';
+	var testsPath = 'build/tests';
+	var expectedPath = 'build/expected';
+	var test_resultsPath = 'build/tests_results';
 	var tests = {}
 
 	var testsOptions = setTestsOptions(testsPath, test_resultsPath, expectedPath);

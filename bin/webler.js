@@ -1,15 +1,15 @@
 var components = require('../lib/components/components');
-var buildBlock = require('../lib/build-block/build-block');
+var build = require('../lib/build/build');
 var handlebars = require('../lib/handlebars/handlebars');
-var tasker = require('../lib/build-block/tasker');
+var tasker = require('../lib/build/tasker');
 var fs = require('fs');
 var utils = require('../lib/utils/utils.js');
 var path = require('path');
 
 
 var modules = {
-	'build-block': function(content, srcDir, dst, options) {
-		var res = buildBlock.parse(content, srcDir, dst, options);
+	build: function(content, srcDir, dst, options) {
+		var res = build.parse(content, srcDir, dst, options);
 		return res;
 	},
 	components: function(cnt, options) {
@@ -20,7 +20,7 @@ var modules = {
 	}
 }
 
-var defaultExec = ['components', 'build-block']
+var defaultExec = ['components', 'build']
 module.exports = {
 	weble: function(src, dst, options, exec) {
 
@@ -30,15 +30,14 @@ module.exports = {
 			exec = defaultExec;
 
 		var content = fs.readFileSync(src).toString();
-		var srcDir = path.dirname(src);
 
+		
 		for (var i in exec) {
+			var res = modules[exec[i]](content, options[exec[i]], src, dst);
 			switch (exec[i]) {
-				case 'build-block':
-					var b = modules['build-block'](content, srcDir, dst, options); //******* options must be changed
-					content = b.content;
-					var tasks = b.tasks;
-
+				case 'build':
+					content = res.content;
+					var tasks = res.tasks;
 					for (var i in tasks) {
 						var task = tasks[i];
 						for (var j in task) {
@@ -48,10 +47,10 @@ module.exports = {
 					}
 					break;
 				case 'components':
-					content = modules.components(content, options);
+					content = res;
 					break;
 				case 'handlebars':
-					content = modules.handlebars(content, options);
+					content = res;
 					break;
 				default:
 					console.log('Unsuported command!');

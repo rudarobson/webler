@@ -16,11 +16,14 @@ var yargs = require('yargs')
 		type: 'string'
 	})
 	.demand(2)
-	.showHelpOnFail(false, "Specify --help for available options")
-	.epilog('Copyright 2015 Rudá Robson')
-	.argv;
+	.showHelpOnFail(true, "Specify --help for available options")
+	.epilog('Copyright 2015 Rudá Robson');
+
+var argv = yargs.argv;
 
 
 if (argv.help) {
 	console.log(yargs.help());
 }
+
+console.log(argv);
