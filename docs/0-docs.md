@@ -4,24 +4,20 @@
 ```js
 
 module.exports = {
-
 	modules : {
-		copy:{
-			srcs:'[string]:require',//string array of source files to be copied
-		},
 		build : {
-			srcRoot: '[string]:required', //root search path for files absolute file reference. ex: <script src="/absolute.js"...> will search at "srcRoot"/absolute.js,
-			dstRoot: '[string]:required', //behaves link srcRoot, but are for destination target files
-			types: '[string:Array]' //only types will be executed, order is maintained,
+			srcRoot: '[string]:required', //The directory to search when an absolute path is processed ex: <script src="/absolute.js"...> will search at "srcRoot"/absolute.js,
+			dstRoot: '[string]:required', //The directory to write files when an absolute path is processed
 			tasks: { //[object] configuring tasks
 				js: '[object]' //object delivered to UglifyJS2
 				css: '[object]' //object delivered to css min,
 				sass: '[object]' //object delivered to node-sass
-			}
+			},
+			runAll:'[boolean]'//default is false
 		},
 		components: {
-			componentsPath: null, //this is a required attribute, where to find components
-			componentExt: '[string]'//file component's extension,
+			componentsPath: '[string]:required', //this is a required attribute, where to find components
+			componentsExt: '[string]'//file component's extension,
 			attrAction: '[string]', //must be 'replace' or 'merge', merge is the default one, attributes will be merged
 			attrs://object to customize the default attribute action
 			{
@@ -29,7 +25,7 @@ module.exports = {
 				id:'replace',
 				'custom-attribute':'replace'
 			},
-			parseAllHyphenTags: true,
+			stopOnNotFound: true,//????????
 			validateName:'[function]' //function (name){return true/false;} validates the name of the tag, by default a valid name must contain a dash (webcomponents spec)
 		},
 		handlebars: {
