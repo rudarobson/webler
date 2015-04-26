@@ -66,4 +66,4 @@ if (argv.help) {
 var _ = argv._;
 argv._ = undefined;
 
-webler.weble(_[0], _[1]);
+webler.weble(_[0], _[1],argv);
