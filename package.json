@@ -1,6 +1,6 @@
 {
   "name": "webler",
-  "version": "0.0.1",
+  "version": "0.0.1002",
   "description": "Web application assembler",
   "keywords": [
     "web",
@@ -12,6 +12,7 @@
   "bugs": {
     "url": "https://github.com/rudarobson/webler/issues"
   },
+  "main":"bin/webler.js",
   "bin": {
     "weble": "bin/launcher"
   },
