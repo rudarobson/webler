@@ -45,3 +45,11 @@ module.exports.handlebars = function(assert) {
 	test(assert, tests, ['handlebars']);
 	assert.done();
 };
+
+module.exports.markdown = function(assert) {
+	var tests = require('./nodeunit/markdown')();
+
+	assert.expect(2);
+	test(assert, tests, ['markdown']);
+	assert.done();
+};

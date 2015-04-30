@@ -1,6 +1,7 @@
 var components = require('../lib/components/components');
 var build = require('../lib/build/build');
 var handlebars = require('../lib/handlebars/handlebars');
+var markdown = require('../lib/markdown/markdown');
 var tasker = require('../lib/build/tasker');
 var fs = require('fs');
 var utils = require('../lib/utils/utils.js');
@@ -17,10 +18,13 @@ var modules = {
   },
   handlebars: function(cnt, options) {
     return handlebars.parse(cnt, options);
-  }
+  },
+  markdown:function(cnt, options) {
+    return markdown.parse(cnt, options);
+  },
 }
 
-var defaultExec = ['components', 'build', 'handlebars']
+var defaultExec = ['markdown', 'components', 'build', 'handlebars']
 module.exports = {
   weble: function(src, dst, options, exec) {
 
@@ -47,9 +51,8 @@ module.exports = {
           }
           break;
         case 'components':
-          content = res;
-          break;
         case 'handlebars':
+        case 'markdown':
           content = res;
           break;
         default:
