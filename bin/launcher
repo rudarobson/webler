@@ -5,6 +5,10 @@ var yargs = require('yargs')
   .usage('Usage: weble src dst')
   .help('h')
   .alias('h', 'help')
+  .option('c', {
+    describe: 'Weble using the fluent API with a configuration file.',
+    type: 'string'
+  })
 
 .option('build.srcRoot', {
     describe: 'The directory to search when an absolute path is processed.',
@@ -66,4 +70,4 @@ if (argv.help) {
 var _ = argv._;
 argv._ = undefined;
 
-webler.weble(_[0], _[1],argv);
+webler.weble(_[0], _[1], argv);
