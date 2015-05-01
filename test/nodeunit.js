@@ -12,7 +12,9 @@ function test(assert, tests, moduleName) {
   for (var i in tests) {
     var test = tests[i]
 
-    webler.weble(test.src, test.dest, test.options).compile()[moduleName]();
+    var unitOfCompilation = webler.weble(test.src, test.dest, test.options);
+		unitOfCompilation.compile()[moduleName]();
+		unitOfCompilation.render();
 
     for (var j in test.assert) {
       actual = fs.readFileSync(test.assert[j].actual).toString();

@@ -27,18 +27,17 @@ var modules = {
     return resp.content;
   },
   handlebars: function(content, options) {
-    return components.parse(content, options);
+    return handlebars.parse(content, options);
   },
   components: function(content, options) {
     return components.parse(content, options);
   },
-  razor: function(src, options) {
+  razor: function(content, options, src) {
     var opt = {};
-
     if (options)
-      util.mergeObjects(opt, options);
-    opt.src = src;
+      utils.mergeObjects(opt, options);
 
+    opt.src = src;
     return razor.parse(opt);
   },
   markdown: function(content, options) {
