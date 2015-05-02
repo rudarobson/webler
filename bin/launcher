@@ -2,10 +2,16 @@
 
 var webler = require('./webler.js');
 var yargs = require('yargs')
-  .usage('Usage: weble src dst')
+  .usage('Usage: weble src dst [options]')
   .help('h')
   .alias('h', 'help')
+
+.option('tmp', {
+    describe: 'Folder path for temporary files.',
+    type: 'string'
+  })
   .option('c', {
+    alias: 'config',
     describe: 'Weble using the fluent API with a configuration file.',
     type: 'string'
   })
@@ -70,4 +76,19 @@ if (argv.help) {
 var _ = argv._;
 argv._ = undefined;
 
-webler.weble(_[0], _[1], argv);
+if (argv.config) { //this is the file configuration path
+  var f = require(argv.config);
+  return f(function(opt) {
+    return new Webler(_[0], _[1], opt);
+  });
+} else {
+  var unitOfCompilation = webler.weble(_[0], _[1], argv);
+  var defaultExec = ['razor', 'components', 'markdown', 'build'];
+
+  for (var i in defaultExec) {
+    unitOfCompilation.compile()[defaultExec[i]](argv[defaultExec[i]]);
+  }
+
+  unitOfCompilation.render();
+  unitOfCompilation.clean();
+}

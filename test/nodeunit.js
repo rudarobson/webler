@@ -11,10 +11,11 @@ function test(assert, tests, moduleName) {
 
   for (var i in tests) {
     var test = tests[i]
+    var unitOfCompilation = webler.weble(test.src, test.dest);
 
-    var unitOfCompilation = webler.weble(test.src, test.dest, test.options);
-		unitOfCompilation.compile()[moduleName]();
-		unitOfCompilation.render();
+    unitOfCompilation.compile()[moduleName](test.options);
+    unitOfCompilation.render();
+    unitOfCompilation.clean();
 
     for (var j in test.assert) {
       actual = fs.readFileSync(test.assert[j].actual).toString();
@@ -59,7 +60,7 @@ module.exports.markdown = function(assert) {
 module.exports.razor = function(assert) {
   var tests = require('./nodeunit/razor')();
 
-  assert.expect(2);
+  assert.expect(3);
   test(assert, tests, 'razor');
   assert.done();
 };

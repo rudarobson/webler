@@ -25,11 +25,6 @@ function setTestsOptions(testsPath, test_resultsPath, expectedPath) {
     }
   };
 
-  for (var i in options) {
-    options[i] = {
-      build: options[i]
-    };
-  }
   return options;
 }
 

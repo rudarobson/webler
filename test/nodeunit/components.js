@@ -10,12 +10,6 @@ function setTestsOptions(testsPath, test_resultsPath, expectedPath) {
 		}
 	}
 
-	for (var i in options) {
-		options[i] = {
-			components: options[i]
-		};
-	}
-	
 	return options;
 }
 
