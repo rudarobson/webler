@@ -124,5 +124,9 @@ function Webler(src, dst, options) {
 module.exports = {
   weble: function(src, dst, options) {
     return new Webler(src, dst, options);
+  },
+  execConfig: function(src, dst, config) {
+    var f = require(path.resolve(process.cwd(), 'Webler.js'));
+    f.call(this, src, dst, config);
   }
 }

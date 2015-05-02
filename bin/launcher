@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 
 var webler = require('./webler.js');
+var path = require('path');
 var yargs = require('yargs')
   .usage('Usage: weble src dst [options]')
   .help('h')
@@ -12,7 +13,7 @@ var yargs = require('yargs')
   })
   .option('c', {
     alias: 'config',
-    describe: 'Weble using the fluent API with a configuration file.',
+    describe: 'Weble using the fluent API with a configuration name ex: Debug, Release.',
     type: 'string'
   })
 
@@ -76,12 +77,11 @@ if (argv.help) {
 var _ = argv._;
 argv._ = undefined;
 
-if (argv.config) { //this is the file configuration path
-  var f = require(argv.config);
-  return f(function(opt) {
-    return new Webler(_[0], _[1], opt);
-  });
-} else {
+
+
+if (argv.config) {
+  webler.execConfig(_[0], _[1], argv.config);
+} else { //this is the configuration name {
   var unitOfCompilation = webler.weble(_[0], _[1], argv);
   var defaultExec = ['razor', 'components', 'markdown', 'build'];
 
