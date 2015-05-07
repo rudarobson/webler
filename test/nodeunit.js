@@ -11,7 +11,10 @@ function test(assert, tests, moduleName) {
 
   for (var i in tests) {
     var test = tests[i]
-    var unitOfCompilation = webler.weble(test.src, test.dest);
+    var unitOfCompilation = webler.weble({
+      src: test.src,
+      dest: test.dest
+    });
 
     unitOfCompilation.compile()[moduleName](test.options);
     unitOfCompilation.render();

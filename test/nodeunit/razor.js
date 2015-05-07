@@ -11,9 +11,7 @@ function setTestsOptions(testsPath, test_resultsPath, expectedPath) {
   for (var i = 2; i <= 2; i++) {
     var testName = 'test' + i
     options[testName] = {
-      model: {
-        Title: 'This File has a model!'
-      }
+      modelsPath: 'razor/tests/' + testName
     };
   }
   return options;
