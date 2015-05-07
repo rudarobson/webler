@@ -80,7 +80,7 @@ argv._ = undefined;
 
 
 if (argv.config) {
-  webler.execConfig(_[0], _[1], argv.config);
+  webler.execConfig(argv.config);
 } else { //this is the configuration name {
   var unitOfCompilation = webler.weble(_[0], _[1], argv);
   var defaultExec = ['razor', 'components', 'markdown', 'build'];

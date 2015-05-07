@@ -8,6 +8,7 @@ var tasker = require('../lib/build/tasker');
 var fs = require('fs');
 var utils = require('../lib/utils/utils.js');
 var path = require('path');
+var glob = require('glob');
 
 var modules = {
   build: function(content, options, globalOptions, src, dst) {
@@ -30,23 +31,38 @@ var modules = {
   components: function(content, options) {
     return components.parse(content, options);
   },
-  razor: function(content, options, globalOptions, src) {
+  razor: function(files, options, globalOptions) {
     var opt = {};
     if (options)
       utils.mergeObjects(opt, options);
 
-    var tmpSrcRazor = path.join(globalOptions.tmp, 'razor.cshtml');
-    utils.safeWriteFile(tmpSrcRazor, content);
-    opt.src = tmpSrcRazor;
+    var pages = [];
+    var destPaths = [];
+    for (var i in files) {
 
-    if (options.model) {
-      var tmpModelRazor = path.join(globalOptions.tmp, 'model_razor.json');
-      utils.safeWriteFile(tmpModelRazor, JSON.stringify(options.model));
-      opt.model = tmpModelRazor;
+      var fileName = files[i];
+      var noExtName = utils.changeFileExt(fileName, '');
+
+      pages.push({
+        source: files[i].src,
+        destination: files[i].dest,
+        model: noExtName + '.model.json',
+        viewBag: noExtName + '.viewbag.json'
+      });
+
+      destPaths.push({
+        src: files[i].dest,
+        dest: files[i].dest
+      });
     }
 
+    opt.pages = pages;
+    var configFilePath = path.join(globalOptions.tmp, 'config.json');
 
-    return razor.parse(opt);
+    utils.safeWriteFile(configFilePath, JSON.stringify(opt));
+    razor.parse(configFilePath);
+
+    return destPaths;
   },
   markdown: function(content, options) {
     return markdown.parse(content, options);
@@ -58,7 +74,7 @@ var defaultWeblerOpts = {
   config: 'Webler.js'
 };
 
-function Webler(src, dst, options) {
+function Webler(files, options) {
   if (!options)
     options = {};
 
@@ -67,42 +83,45 @@ function Webler(src, dst, options) {
       options[i] = defaultWeblerOpts[i];
   }
 
-  var content = fs.readFileSync(src).toString();
+  var curFiles = files;
+  var pipelineMap = {};
+  var pipelineOrder = [];
+
+  function addToPipeline(moduleName, opt) {
+    var order = pipelineMap[moduleName];
+    if (order != undefined) {
+      pipelineOrder[order].options = opt;
+    } else {
+      pipelineOrder.push({
+        type: moduleName,
+        options: opt
+      });
+      pipelineMap[moduleName] = pipelineOrder.length - 1;
+    }
+  }
 
   var parsers = {
     build: function(opt) {
-      if (!opt)
-        opt = {};
-
-      content = modules.build(content, opt, options, src, dst);
+      addToPipeline('build', opt);
       return parsers;
     },
     handlebars: function(opt) {
-      if (!opt)
-        opt = {};
-
-      content = modules.handlebars(content, opt, options, src, dst);
+      addToPipeline('handlebars', opt);
       return parsers;
     },
     components: function(opt) {
-      if (!opt)
-        opt = {};
-
-      content = modules.components(content, opt, options, src, dst);
+      addToPipeline('components', opt);
       return parsers;
     },
     razor: function(opt) {
-      if (!opt)
-        opt = {};
-
-      content = modules.razor(content, opt, options, src);
+      if (pipelineMap['razor'] != undefined || pipelineOrder.length > 0) {
+        throw 'Razor can be executed only once and be the first';
+      }
+      addToPipeline('razor', opt);
       return parsers;
     },
     markdown: function(opt) {
-      if (!opt)
-        opt = {};
-
-      content = modules.markdown(content, opt, options, src, dst);
+      addToPipeline('markdown', opt);
       return parsers;
     }
   }
@@ -112,7 +131,16 @@ function Webler(src, dst, options) {
   }
 
   this.render = function() {
-    utils.safeWriteFile(dst, content);
+    if (pipelineOrder.length > 0 && pipelineOrder[0].type == 'razor') {
+      var razor = pipelineOrder.shift(); //remove razor
+      curFiles = modules.razor(curFiles, razor.options, options);
+    }
+
+    for (var i in pipelineOrder) {
+      var mod = pipelineOrder[i];
+      modules[mod]();
+    }
+    //utils.safeWriteFile(dst, content);
   }
 
   this.clean = function() {
@@ -122,11 +150,31 @@ function Webler(src, dst, options) {
 
 
 module.exports = {
-  weble: function(src, dst, options) {
-    return new Webler(src, dst, options);
+  weble: function(globs, options) {
+    var files = [];
+    for (var i in globs) {
+      var obj = globs[i];
+
+      var group = glob.sync(obj.src, {
+        cwd: obj.cwd
+      });
+
+      var cwd = obj.cwd || ''; //use with path.join cannot be undefined
+
+      for (var j in group) {
+        var file = group[j];
+
+        files.push({
+          src: path.join(cwd, file), //fullpath
+          dest: utils.changeFileExt(path.join(obj.dest, file), '.html') //fullpath
+        });
+      }
+    }
+    
+    return new Webler(files, options);
   },
-  execConfig: function(src, dst, config) {
+  execConfig: function(config) {
     var f = require(path.resolve(process.cwd(), 'Webler.js'));
-    f.call(this, src, dst, config);
+    f.call(this, config);
   }
 }
