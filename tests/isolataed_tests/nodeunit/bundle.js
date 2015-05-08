@@ -19,7 +19,20 @@ function setTestsOptions(testsPath, test_resultsPath, expectedPath) {
     }
   };
 
-  for (var i = 0; i <= 2; i++) {
+  options.test3 = {
+    module: {
+      bundlesToRegister: [{
+        type: 'styles',
+        key: '~/index.css',
+        files: [{
+          type: 'sass',
+          src: '~/index.scss'
+        }]
+      }]
+    }
+  };
+
+  for (var i = 0; i <= 3; i++) {
     var testName = 'test' + i;
     if (!options[testName])
       options[testName] = {};
@@ -49,12 +62,13 @@ function setTests() {
   var testsDescription = {
     test0: 'test0: empty file test',
     test1: 'test1: html without any bundle',
-    test2: 'test2: javascript bundle'
+    test2: 'test2: javascript bundle',
+    test3: 'test3: sass bundle',
   };
 
 
 
-  for (var i = 0; i <= 2; i++) {
+  for (var i = 0; i <= 3; i++) {
     var testName = 'test' + i;
 
     tests[testName] = {
@@ -72,6 +86,11 @@ function setTests() {
   tests.test2.assert.push({
     actual: path.join(test_resultsPath, 'test2/index.js'),
     expected: path.join(expectedPath, 'test2/index.js')
+  });
+
+  tests.test3.assert.push({
+    actual: path.join(test_resultsPath, 'test3/index.css'),
+    expected: path.join(expectedPath, 'test3/index.css')
   });
 
   return tests;

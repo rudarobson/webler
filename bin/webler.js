@@ -9,6 +9,7 @@ var tasker = require('../lib/build/tasker');
 var fs = require('fs');
 var utils = require('../lib/utils/utils.js');
 var vpCreator = require('../lib/utils/virtualPath.js');
+var tpCreator = require('../lib/utils/tempPath.js');
 var path = require('path');
 var glob = require('glob');
 
@@ -27,25 +28,25 @@ var modules = {
 
     return resp.content;
   },*/
-  bundle: function(content, options, vp) {
-    return bundle.parse(content, options, vp);
+  bundle: function(content, options, wp) {
+    return bundle.parse(content, options, wp);
   },
-  handlebars: function(content, options, vp) {
+  handlebars: function(content, options, wp) {
     return handlebars.parse(content, options);
   },
-  components: function(content, options, vp) {
+  components: function(content, options, wp) {
     return components.parse(content, options);
   },
-  razor: function(files, options, vp, globalOptions) {
-    return razor.parse(files, options, globalOptions.tmp);
+  razor: function(files, options, wp) {
+    return razor.parse(files, options, wp.tp.dir());
   },
-  markdown: function(content, options, vp) {
+  markdown: function(content, options, wp) {
     return markdown.parse(content, options);
   }
 };
 
 var defaultWeblerOpts = {
-  tmp: '.webler_tmp',
+  temp: '.webler_temp',
   config: 'Webler.js'
 };
 
@@ -58,10 +59,13 @@ function Webler(files, options) {
       options[i] = defaultWeblerOpts[i];
   }
 
-  var vp;
+  var wp = {};
+
   if (options.virtualPath)
-    vp = vpCreator(options.virtualPath.src, options.virtualPath.dest)
-  
+    wp.vp = vpCreator(options.virtualPath.src, options.virtualPath.dest)
+
+  if (options.temp)
+    wp.tp = tpCreator(options.temp);
 
   var curFiles = files;
   var pipelineMap = {};
@@ -113,14 +117,14 @@ function Webler(files, options) {
   this.render = function() {
     if (pipelineOrder.length > 0 && pipelineOrder[0].type == 'razor') {
       var razorConfig = pipelineOrder.shift(); //remove razor
-      curFiles = modules.razor(curFiles, razorConfig.options, vp, options);
+      curFiles = modules.razor(curFiles, razorConfig.options, wp, options);
     }
 
     for (var i in curFiles) {
       var res = fs.readFileSync(curFiles[i].src).toString();
       for (var j in pipelineOrder) {
         var pipeline = pipelineOrder[j];
-        res = modules[pipeline.type](res, pipeline.options, vp, options);
+        res = modules[pipeline.type](res, pipeline.options, wp, options);
       }
       utils.safeWriteFile(curFiles[i].dest, res);
     }
@@ -128,7 +132,7 @@ function Webler(files, options) {
   }
 
   this.clean = function() {
-    utils.deleteFolder(options.tmp);
+    utils.deleteFolder(options.temp);
   }
 }
 

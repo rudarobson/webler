@@ -81,7 +81,7 @@ module.exports.bundle = function(assert) {
   var expected;
   var actual;
 
-  assert.expect(4);
+  assert.expect(6);
   var bundleApi = require('../../lib/bundle/bundle');
 
   for (var i in tests) {
