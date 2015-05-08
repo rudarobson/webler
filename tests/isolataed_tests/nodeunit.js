@@ -1,6 +1,13 @@
 var fs = require('fs');
 var webler = require('../../bin/webler');
 
+function assertFiles(assert, files, description) {
+  for (var j in files) {
+    actual = fs.readFileSync(files[j].actual).toString();
+    expected = fs.readFileSync(files[j].expected).toString();
+    assert.equals(actual, expected, description);
+  }
+}
 
 function test(assert, tests, moduleName) {
   var src;
@@ -20,21 +27,18 @@ function test(assert, tests, moduleName) {
     unitOfCompilation.render();
     unitOfCompilation.clean();
 
-    for (var j in test.assert) {
-      actual = fs.readFileSync(test.assert[j].actual).toString();
-      expected = fs.readFileSync(test.assert[j].expected).toString();
-      assert.equals(actual, expected, test.description);
-    }
+    assertFiles(assert, test.assert, test.description);
   }
 }
 
-module.exports.build = function(assert) {
+
+/*module.exports.build = function(assert) {
   var tests = require('./nodeunit/build')();
 
   assert.expect(18);
   test(assert, tests, 'build');
   assert.done();
-};
+};*/
 
 module.exports.components = function(assert) {
   var tests = require('./nodeunit/components')();
@@ -67,3 +71,44 @@ module.exports.razor = function(assert) {
   test(assert, tests, 'razor');
   assert.done();
 };
+
+
+module.exports.bundle = function(assert) {
+  var tests = require('./nodeunit/bundle')();
+  var src;
+  var res;
+  var dest;
+  var expected;
+  var actual;
+
+  assert.expect(4);
+  var bundleApi = require('../../lib/bundle/bundle');
+
+  for (var i in tests) {
+    var test = tests[i]
+    var unitOfCompilation = webler.weble({
+      src: test.src,
+      dest: test.dest
+    }, test.options.webler);
+
+    var bundlesToRegister = test.options.module.bundlesToRegister;
+    for (var i in bundlesToRegister) {
+      var register = bundlesToRegister[i];
+      var bundle = bundleApi.bundles().add(register.type, register.key);
+      for (var j in register.files) {
+        var file = register.files[j];
+        bundle.include(file.type, file.src)
+      }
+    }
+
+    unitOfCompilation.compile().bundle(test.options.module);
+    unitOfCompilation.render();
+    unitOfCompilation.clean();
+
+    bundleApi.bundles().bundles = {}; //clean registered bundles
+    assertFiles(assert, test.assert, test.description);
+  }
+
+
+  assert.done();
+}

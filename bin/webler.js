@@ -3,16 +3,17 @@ var build = require('../lib/build/build');
 var handlebars = require('../lib/handlebars/handlebars');
 var markdown = require('../lib/markdown/markdown');
 var razor = require('../lib/razor/razor');
-
+var bundle = require('../lib/bundle/bundle');
 var tasker = require('../lib/build/tasker');
 
 var fs = require('fs');
 var utils = require('../lib/utils/utils.js');
+var vpCreator = require('../lib/utils/virtualPath.js');
 var path = require('path');
 var glob = require('glob');
 
 var modules = {
-  build: function(content, options, globalOptions, src, dst) {
+  /*build: function(content, options, globalOptions, src, dst) {
     var resp = build.parse(content, options, src, dst);
     var tasks = resp.tasks;
 
@@ -25,17 +26,20 @@ var modules = {
     }
 
     return resp.content;
+  },*/
+  bundle: function(content, options, vp) {
+    return bundle.parse(content, options, vp);
   },
-  handlebars: function(content, options) {
+  handlebars: function(content, options, vp) {
     return handlebars.parse(content, options);
   },
-  components: function(content, options) {
+  components: function(content, options, vp) {
     return components.parse(content, options);
   },
-  razor: function(files, options, globalOptions) {
+  razor: function(files, options, vp, globalOptions) {
     return razor.parse(files, options, globalOptions.tmp);
   },
-  markdown: function(content, options) {
+  markdown: function(content, options, vp) {
     return markdown.parse(content, options);
   }
 };
@@ -54,6 +58,11 @@ function Webler(files, options) {
       options[i] = defaultWeblerOpts[i];
   }
 
+  var vp;
+  if (options.virtualPath)
+    vp = vpCreator(options.virtualPath.src, options.virtualPath.dest)
+  
+
   var curFiles = files;
   var pipelineMap = {};
   var pipelineOrder = [];
@@ -70,6 +79,10 @@ function Webler(files, options) {
   var parsers = {
     build: function(opt) {
       addToPipeline('build', opt);
+      return parsers;
+    },
+    bundle: function(opt) {
+      addToPipeline('bundle', opt);
       return parsers;
     },
     handlebars: function(opt) {
@@ -100,14 +113,14 @@ function Webler(files, options) {
   this.render = function() {
     if (pipelineOrder.length > 0 && pipelineOrder[0].type == 'razor') {
       var razorConfig = pipelineOrder.shift(); //remove razor
-      curFiles = modules.razor(curFiles, razorConfig.options, options);
+      curFiles = modules.razor(curFiles, razorConfig.options, vp, options);
     }
 
     for (var i in curFiles) {
       var res = fs.readFileSync(curFiles[i].src).toString();
       for (var j in pipelineOrder) {
         var pipeline = pipelineOrder[j];
-        res = modules[pipeline.type](res, pipeline.options, options, curFiles[i].src, curFiles[i].dest);
+        res = modules[pipeline.type](res, pipeline.options, vp, options);
       }
       utils.safeWriteFile(curFiles[i].dest, res);
     }
