@@ -1,3 +1,4 @@
+**.webler_temp
 **.webler_tmp
 node_modules
 tests/**/tests_results
