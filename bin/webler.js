@@ -28,19 +28,19 @@ var modules = {
 
     return resp.content;
   },*/
-  bundle: function(content, options, wp) {
-    return bundle.parse(content, options, wp);
+  bundle: function(content, options, wp, globalOptions, fCtx) {
+    return bundle.parse(content, options, wp, globalOptions, fCtx);
   },
-  handlebars: function(content, options, wp) {
+  handlebars: function(content, options, wp, globalOptions, fCtx) {
     return handlebars.parse(content, options);
   },
-  components: function(content, options, wp) {
+  components: function(content, options, wp, globalOptions, fCtx) {
     return components.parse(content, options);
   },
-  razor: function(files, options, wp) {
+  razor: function(files, options, wp, globalOptions) {
     return razor.parse(files, options, wp.tp.dir());
   },
-  markdown: function(content, options, wp) {
+  markdown: function(content, options, wp, globalOptions, fCtx) {
     return markdown.parse(content, options);
   }
 };
@@ -124,7 +124,11 @@ function Webler(files, options) {
       var res = fs.readFileSync(curFiles[i].src).toString();
       for (var j in pipelineOrder) {
         var pipeline = pipelineOrder[j];
-        res = modules[pipeline.type](res, pipeline.options, wp, options);
+
+        res = modules[pipeline.type](
+          res, pipeline.options,
+          wp, options,
+          curFiles[i].ctx);
       }
       utils.safeWriteFile(curFiles[i].dest, res);
     }
@@ -164,17 +168,16 @@ module.exports = {
       for (var j in group) {
         var file = group[j];
 
-        if (obj.cwd) { //using cwd
-          src = path.join(obj.cwd, file); //fullpath
-          dest = utils.changeFileExt(path.join(obj.dest, file), '.html');
-        } else {
-          src = obj.src;
-          dest = obj.dest; //no cwd dest path is absolute
-        }
+        var p = utils.resolveGlob(file, obj.dest, obj.cwd);
 
         files.push({
-          src: src,
-          dest: dest //fullpath
+          src: p.src,
+          dest: p.dest, //fullpath
+          ctx: {
+            src: file,
+            dest: obj.dest,
+            cwd: obj.cwd
+          }
         });
       }
     }
