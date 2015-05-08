@@ -1,5 +1,5 @@
 var fs = require('fs');
-var webler = require('../bin/webler');
+var webler = require('../../bin/webler');
 
 
 function test(assert, tests, moduleName) {

@@ -17,58 +17,7 @@ var yargs = require('yargs')
     type: 'string'
   })
 
-.option('build.srcRoot', {
-    describe: 'The directory to search when an absolute path is processed.',
-    type: 'string'
-  })
-  .option('build.dstRoot', {
-    describe: 'The directory to write files when an absolute path is processed.',
-    type: 'string'
-  })
-  .option('build.tasks', {
-    describe: 'An object with an array that will be delivered to the task, or a boolean, meaning ro run or not.',
-    type: 'array:string'
-  })
-  .option('build.runAll', {
-    describe: 'If build.tasks is given, only tasks at that array will be processed, unless runAll is true.',
-    type: 'string'
-  })
-
-.option('components.componentsPath', {
-    describe: 'Path where to find components.',
-    type: 'string:required'
-  })
-  .option('components.componentsExt', {
-    describe: 'Components file extension.',
-    type: 'string'
-  })
-  .option('components.attrAction', {
-    describe: 'Possible values are merge and replace. It\'s used to merge or replace the attributes at the root tag of the template.Default is replace',
-    type: 'string'
-  })
-  .option('components.attrs', {
-    describe: 'Possible values are merge and replace. It\'s used to merge or replace the attributes at the root tag of the template.',
-    type: 'object:[key:attributeName,value:replace|merge]'
-  })
-  .option('components.stopOnNotFound', {
-    describe: 'Stops if template is not found. Default is true',
-    type: '[boolean]'
-  })
-
-.option('components.validateName', {
-    describe: 'Returns a boolean, validates the tag name, the default must contains a dash (web components).',
-    type: '[function]'
-  })
-  .option('handlebars.layoutsPath', {
-    describe: 'Place where to find layouts.',
-    type: '[string]'
-  })
-  .demand(2)
-  .showHelpOnFail(true, "Specify --help for available options")
-  .epilog('Copyright 2015 Rudá Robson');
-
 var argv = yargs.argv;
-
 
 if (argv.help) {
   console.log(yargs.help());
@@ -77,18 +26,5 @@ if (argv.help) {
 var _ = argv._;
 argv._ = undefined;
 
-
-
-if (argv.config) {
-  webler.execConfig(argv.config);
-} else { //this is the configuration name {
-  var unitOfCompilation = webler.weble(_[0], _[1], argv);
-  var defaultExec = ['razor', 'components', 'markdown', 'build'];
-
-  for (var i in defaultExec) {
-    unitOfCompilation.compile()[defaultExec[i]](argv[defaultExec[i]]);
-  }
-
-  unitOfCompilation.render();
-  unitOfCompilation.clean();
-}
+var f = require(path.resolve(process.cwd(), 'Webler.js'));
+f.call(webler, argv.config);

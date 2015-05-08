@@ -65,7 +65,6 @@ function Webler(files, options) {
     });
 
     pipelineMap[moduleName] = true;
-
   }
 
   var parsers = {
@@ -164,9 +163,5 @@ module.exports = {
     }
 
     return new Webler(files, options);
-  },
-  execConfig: function(config) {
-    var f = require(path.resolve(process.cwd(), 'Webler.js'));
-    f.call(this, config);
   }
 }
