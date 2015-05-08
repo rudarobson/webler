@@ -2,13 +2,18 @@
 <html lang="pt-br">
 
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8" /> @RenderSection("styles",false)
   @RenderSection("styles",false)
 </head>
 
 <body>
-  @RenderBody()
-  @RenderSection("scripts",false)
+  <!-- markdown: -->
+  ```html
+  <div>Some Markdown at layout</div>
+  ```
+  <!-- /markdown -->
+
+  @RenderBody() @RenderSection("scripts",false)
 </body>
 
 </html>

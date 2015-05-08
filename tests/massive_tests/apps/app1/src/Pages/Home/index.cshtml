@@ -2,10 +2,20 @@
   Layout="Layout.cshtml";
 }
 
+@section scripts {
+  <script type="text/javascript" src="~/Home/Index/index.js"></script>
+}
+
 <!-- components:
   import my-tag;
+  import nested;
 -->
 
 <my-tag>
-  This is a custom tags
+  This is a custom tag
 </my-tag>
+
+<nested-tag>
+  <span class="label">Label</span>
+  <span class="description">Description</span>
+</nested-tag>

@@ -114,6 +114,10 @@ function Webler(files, options) {
     return parsers;
   }
 
+  this.bundles = function() {
+    return bundle.bundles();
+  }
+
   this.render = function() {
     if (pipelineOrder.length > 0 && pipelineOrder[0].type == 'razor') {
       var razorConfig = pipelineOrder.shift(); //remove razor
