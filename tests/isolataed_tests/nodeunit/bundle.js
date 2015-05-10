@@ -38,7 +38,7 @@ function setTestsOptions(testsPath, test_resultsPath, expectedPath) {
       options[testName] = {};
 
     options[testName].webler = {
-      virtualPath: {
+      appRoot: {
         src: path.join(testsPath, testName),
         dest: path.join(test_resultsPath, testName)
       }

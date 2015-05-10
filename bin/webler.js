@@ -61,8 +61,8 @@ function Webler(files, options) {
 
   var wp = {};
 
-  if (options.virtualPath)
-    wp.vp = vpCreator(options.virtualPath.src, options.virtualPath.dest)
+
+  wp.vp = vpCreator(options.appRoot.src, options.appRoot.dest)
 
   if (options.temp)
     wp.tp = tpCreator(options.temp);
@@ -148,6 +148,21 @@ function Webler(files, options) {
 module.exports = {
   weble: function(globs, options) {
     var files = [];
+    
+    if (!options)
+      options = {};
+
+    if (!options.appRoot) {
+      options.appRoot = {};
+    }
+
+    if (!options.appRoot.src) {
+      options.appRoot.src = './'; //use current working directory as app root
+    }
+
+    if (!options.appRoot.dest) {
+      options.appRoot.dest = './dist';
+    }
 
     if (globs.constructor !== Array) {
       globs = [globs];
