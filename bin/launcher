@@ -3,19 +3,9 @@
 var webler = require('./webler.js');
 var path = require('path');
 var yargs = require('yargs')
-  .usage('Usage: weble src dst [options]')
+  .usage('Usage: weble [config]')
   .help('h')
-  .alias('h', 'help')
-
-.option('tmp', {
-    describe: 'Folder path for temporary files.',
-    type: 'string'
-  })
-  .option('c', {
-    alias: 'config',
-    describe: 'Weble using the fluent API with a configuration name ex: Debug, Release.',
-    type: 'string'
-  })
+  .alias('h', 'help');
 
 var argv = yargs.argv;
 
@@ -27,4 +17,4 @@ var _ = argv._;
 argv._ = undefined;
 
 var f = require(path.resolve(process.cwd(), 'Webler.js'));
-f.call(webler, argv.config);
+f.call(webler, _[0]);

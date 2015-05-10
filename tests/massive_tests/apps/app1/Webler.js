@@ -9,7 +9,7 @@ module.exports = function(config) {
     src: '**/*.cshtml',
     dest: 'tests_results'
   }, {
-    virtualPath: {
+    appRoot: {
       src: 'src',
       dest: 'tests_result'
     }
