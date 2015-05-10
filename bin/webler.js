@@ -38,7 +38,7 @@ var modules = {
     return components.parse(content, options);
   },
   razor: function(files, options, wp, globalOptions) {
-    return razor.parse(files, options, wp.tp.dir());
+    return razor.parse(files, options, wp);
   },
   markdown: function(content, options, wp, globalOptions, fCtx) {
     return markdown.parse(content, options);
@@ -158,10 +158,11 @@ module.exports = {
       var glob_opt = undefined;
 
 
-      if (obj.cwd)
+      if (obj.cwd) {
         glob_opt = {
           cwd: obj.cwd
         };
+      }
 
       var group = glob.sync(obj.src, glob_opt);
 
