@@ -23,7 +23,7 @@ function registerBundles(bundles) {
 module.exports = function(config) {
   var unit = this.weble({
     cwd: 'src/Pages',
-    src: '**/*.cshtml',
+    src: '**/*.@(cshtml|html)',
     dest: 'release'
   }, {
     appRoot: {

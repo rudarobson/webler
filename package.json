@@ -14,7 +14,8 @@
   },
   "main": "bin/webler.js",
   "bin": {
-    "weble": "bin/launcher"
+    "weble": "bin/launcher",
+    "winit": "bin/winit.js"
   },
   "preferGlobal": true,
   "dependencies": {
