@@ -12,6 +12,7 @@ var vpCreator = require('../lib/utils/virtualPath.js');
 var tpCreator = require('../lib/utils/tempPath.js');
 var path = require('path');
 var glob = require('glob');
+var htmlmin = require('htmlmin');
 
 var modules = {
   /*build: function(content, options, globalOptions, src, dst) {
@@ -134,7 +135,7 @@ function Webler(files, options) {
           wp, options,
           curFiles[i].ctx);
       }
-      utils.safeWriteFile(curFiles[i].dest, res);
+      utils.safeWriteFile(curFiles[i].dest, htmlmin(res));
     }
 
   }
@@ -148,7 +149,7 @@ function Webler(files, options) {
 module.exports = {
   weble: function(globs, options) {
     var files = [];
-    
+
     if (!options)
       options = {};
 
