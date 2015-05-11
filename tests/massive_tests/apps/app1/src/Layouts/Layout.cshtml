@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8" /> @RenderSection("styles",false)
+  <link type="text/css" rel="stylesheet" href="~/assets/css/site.css" />
   @RenderSection("styles",false)
 </head>
 
@@ -13,7 +14,9 @@
   ```
   <!-- /markdown -->
 
-  @RenderBody() @RenderSection("scripts",false)
+  @RenderBody()
+  <script type="text/javascript" src="~/assets/js/commonAsset.js"></script>
+  @RenderSection("scripts",false)
 </body>
 
 </html>
