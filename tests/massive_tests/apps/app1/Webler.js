@@ -11,7 +11,7 @@ module.exports = function(config) {
   }, {
     appRoot: {
       src: 'src',
-      dest: 'tests_result'
+      dest: 'tests_results'
     }
   });
 
