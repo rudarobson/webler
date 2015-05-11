@@ -12,7 +12,7 @@ var vpCreator = require('../lib/utils/virtualPath.js');
 var tpCreator = require('../lib/utils/tempPath.js');
 var path = require('path');
 var glob = require('glob');
-var htmlmin = require('htmlmin');
+var htmlmin = require('html-minifier').minify;
 
 var modules = {
   /*build: function(content, options, globalOptions, src, dst) {
@@ -29,26 +29,34 @@ var modules = {
 
     return resp.content;
   },*/
-  bundle: function(content, options, wp, globalOptions, fCtx) {
-    return bundle.parse(content, options, wp, globalOptions, fCtx);
+  bundle: function(content, options, wp, globalOptions, htmlDest) {
+    return bundle.parse(content, wp, htmlDest);
   },
-  handlebars: function(content, options, wp, globalOptions, fCtx) {
+  handlebars: function(content, options) {
     return handlebars.parse(content, options);
   },
-  components: function(content, options, wp, globalOptions, fCtx) {
+  components: function(content, options) {
     return components.parse(content, options);
   },
-  razor: function(files, options, wp, globalOptions) {
+  razor: function(files, options, wp) {
     return razor.parse(files, options, wp);
   },
-  markdown: function(content, options, wp, globalOptions, fCtx) {
+  markdown: function(content, options) {
     return markdown.parse(content, options);
   }
 };
 
 var defaultWeblerOpts = {
   temp: '.webler_temp',
-  config: 'Webler.js'
+  config: 'Webler.js',
+  htmlMiniier: function(html) {
+    return htmlmin(html, { // Target options
+      removeComments: true,
+      collapseWhitespace: true,
+      minifyCss: true,
+      minifyJS: true
+    });
+  }
 };
 
 function Webler(files, options) {
@@ -133,9 +141,9 @@ function Webler(files, options) {
         res = modules[pipeline.type](
           res, pipeline.options,
           wp, options,
-          curFiles[i].ctx);
+          curFiles[i].dest);
       }
-      utils.safeWriteFile(curFiles[i].dest, htmlmin(res));
+      utils.safeWriteFile(curFiles[i].dest, options.htmlMiniier(res));
     }
 
   }
