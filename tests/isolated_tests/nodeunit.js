@@ -19,8 +19,10 @@ function test(assert, tests, moduleName) {
   for (var i in tests) {
     var test = tests[i]
     var unitOfCompilation = webler.weble({
-      src: test.src,
-      dest: test.dest
+      globs: {
+        src: test.src,
+        dest: test.dest
+      }
     });
 
     unitOfCompilation.compile()[moduleName](test.options);
@@ -86,10 +88,16 @@ module.exports.bundle = function(assert) {
 
   for (var i in tests) {
     var test = tests[i]
-    var unitOfCompilation = webler.weble({
+
+    if (!test.options.webler)
+      test.options.webler = {};
+
+    test.options.webler.globs = {
       src: test.src,
       dest: test.dest
-    }, test.options.webler);
+    }
+
+    var unitOfCompilation = webler.weble(test.options.webler);
 
     var bundlesToRegister = test.options.module.bundlesToRegister;
     for (var i in bundlesToRegister) {

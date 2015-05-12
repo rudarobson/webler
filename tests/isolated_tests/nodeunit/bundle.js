@@ -38,10 +38,8 @@ function setTestsOptions(testsPath, test_resultsPath, expectedPath) {
       options[testName] = {};
 
     options[testName].webler = {
-      appRoot: {
-        src: path.join(testsPath, testName),
-        dest: path.join(test_resultsPath, testName)
-      }
+      src: path.join(testsPath, testName),
+      dest: path.join(test_resultsPath, testName)
     }
 
     if (!options[testName].module)

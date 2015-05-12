@@ -16,5 +16,5 @@ if (argv.help) {
 var _ = argv._;
 argv._ = undefined;
 
-var f = require(path.resolve(process.cwd(), 'Webler.js'));
+var f = require(path.resolve(process.cwd(), 'webler.js'));
 f.call(webler, _[0]);

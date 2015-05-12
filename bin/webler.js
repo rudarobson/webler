@@ -70,8 +70,7 @@ function Webler(files, options) {
 
   var wp = {};
 
-
-  wp.vp = vpCreator(options.appRoot.src, options.appRoot.dest)
+  wp.vp = vpCreator(options.src, options.dest)
 
   if (options.temp)
     wp.tp = tpCreator(options.temp);
@@ -103,13 +102,24 @@ function Webler(files, options) {
       return parsers;
     },
     components: function(opt) {
-      opt.componentsPath = path.join(wp.vp.vSrc(), opt.componentsPath);
+      opt.componentsPath = wp.vp.resolveSrc(opt.componentsPath);
+      //opt.componentsPath = path.join(wp.vp.vSrc(), opt.componentsPath);
       addToPipeline('components', opt);
       return parsers;
     },
     razor: function(opt) {
       if (pipelineMap['razor'] != undefined || pipelineOrder.length > 0) {
         throw 'Razor can be executed only once and be the first';
+      }
+
+      if (opt) {
+        var toResolve = ['layoutsPath', 'modelsPath', 'viewBagsPath'];
+
+        for (var i in toResolve) {
+          if (opt[toResolve[i]]) {
+            opt[toResolve[i]] = wp.vp.resolveSrc(opt[toResolve[i]]);
+          }
+        }
       }
       addToPipeline('razor', opt);
       return parsers;
@@ -155,62 +165,70 @@ function Webler(files, options) {
 }
 
 
+function solveGlobs(globs, src, dest) {
+  var files = [];
+
+  var vp = vpCreator(src, dest);
+
+  for (var i in globs) {
+    var obj = globs[i];
+    var glob_opt = undefined;
+
+
+    if (obj.cwd) {
+      obj.cwd = vp.resolveSrc(obj.cwd);
+      glob_opt = {
+        cwd: obj.cwd
+      };
+    }
+
+    var group = glob.sync(vp.resolveSrc(obj.src), glob_opt);
+
+
+    var src;
+    var dest;
+
+    for (var j in group) {
+      var file = group[j];
+
+      var p = utils.resolveGlob(file, vp.resolveDest(obj.dest), obj.cwd);
+
+      files.push({
+        src: p.src,
+        dest: p.dest, //fullpath
+        ctx: {
+          src: file,
+          dest: obj.dest,
+          cwd: obj.cwd
+        }
+      });
+    }
+  }
+
+  return files;
+}
+
 module.exports = {
-  weble: function(globs, options) {
-    var files = [];
+  /* [path],globs,options */
+  weble: function(options) {
 
-    if (!options)
-      options = {};
 
-    if (!options.appRoot) {
-      options.appRoot = {};
+    if (!options.src) {
+      options.src = './'; //use current working directory as app root
     }
 
-    if (!options.appRoot.src) {
-      options.appRoot.src = './'; //use current working directory as app root
+    if (!options.dest) {
+      options.dest = './dist';
     }
 
-    if (!options.appRoot.dest) {
-      options.appRoot.dest = './dist';
-    }
-
+    var globs = options.globs;
     if (globs.constructor !== Array) {
       globs = [globs];
     }
 
-    for (var i in globs) {
-      var obj = globs[i];
-      var glob_opt = undefined;
 
 
-      if (obj.cwd) {
-        glob_opt = {
-          cwd: obj.cwd
-        };
-      }
-
-      var group = glob.sync(obj.src, glob_opt);
-
-
-      var src;
-      var dest;
-
-      for (var j in group) {
-        var file = group[j];
-
-        var p = utils.resolveGlob(file, obj.dest, obj.cwd);
-
-        files.push({
-          src: p.src,
-          dest: p.dest, //fullpath
-          ctx: {
-            src: file,
-            dest: obj.dest,
-            cwd: obj.cwd
-          }
-        });
-      }
-    }
+    var files = solveGlobs(globs, options.src, options.dest);
 
     return new Webler(files, options);
   }
