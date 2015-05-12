@@ -9,12 +9,12 @@ function registerBundles(bundles) {
 
 module.exports = function(config) {
   var unit = this.weble({
-    src: 'src',
-    dest: 'dist',
+    src: 'src', //~ will be substituted by this path when is a source file
+    dest: 'dist', //~ will be substituted by this path when is a destination file
     globs: {
       cwd: '~Pages',
       src: '**/*.@(cshtml|html)', //matches html and cshtml files
-      dest: 'dist'
+      dest: '~' //destination root
     }
   })
 

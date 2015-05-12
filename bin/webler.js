@@ -174,6 +174,7 @@ function solveGlobs(globs, src, dest) {
     var obj = globs[i];
     var glob_opt = undefined;
 
+    obj.dest = vp.resolveDest(obj.dest);
 
     if (obj.cwd) {
       obj.cwd = vp.resolveSrc(obj.cwd);

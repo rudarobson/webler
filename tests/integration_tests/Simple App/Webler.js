@@ -27,7 +27,7 @@ module.exports = function(config) {
     globs: {
       cwd: '~Pages',
       src: '**/*.@(cshtml|html)',
-      dest: 'release'
+      dest: '~' //destination root
     }
   });
 
