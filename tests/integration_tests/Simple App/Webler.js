@@ -22,7 +22,7 @@ function registerBundles(bundles) {
 
 module.exports = function(config) {
   var unit = this.weble({
-    cwd: 'src/Pages',
+    cwd: 'Pages',
     src: '**/*.@(cshtml|html)',
     dest: 'release'
   }, {
@@ -35,11 +35,11 @@ module.exports = function(config) {
   registerBundles(unit.bundles());
 
   unit.compile().razor({
-      layoutsPath: 'src/Layouts'
+      layoutsPath: 'Layouts'
     })
     .bundle()
     .components({
-      componentsPath: 'src/Components'
+      componentsPath: 'Components'
     })
     .markdown();
 

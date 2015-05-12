@@ -9,24 +9,26 @@ function registerBundles(bundles) {
 
 module.exports = function(config) {
   var unit = this.weble({
-    cwd: 'src',
-    src: '**/*.@(cshtml|html)',//matches html and cshtml files
+    cwd: 'src/Pages',
+    src: '**/*.@(cshtml|html)', //matches html and cshtml files
     dest: 'dist'
   }, {
     appRoot: {
-      src: 'src',//~ will be substituted by this path when is a source file
-      dest: 'dist'//~ will be substituted by this path when is a destination file
+      src: 'src', //~ will be substituted by this path when is a source file
+      dest: 'dist' //~ will be substituted by this path when is a destination file
     }
   });
 
   registerBundles(unit.bundles());
 
   unit.compile().razor({
-      layoutsPath: 'src/Layouts'
+      modelsPath: 'ModelsAndViewBags',
+      viewBagsPath: 'ModelsAndViewBags',
+      layoutsPath: 'Layouts'
     })
     .bundle()
     .components({
-      componentsPath: 'src/Components'
+      componentsPath: 'Components'
     })
     .markdown();
 

@@ -103,6 +103,7 @@ function Webler(files, options) {
       return parsers;
     },
     components: function(opt) {
+      opt.componentsPath = path.join(wp.vp.vSrc(), opt.componentsPath);
       addToPipeline('components', opt);
       return parsers;
     },
