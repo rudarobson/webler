@@ -30,5 +30,5 @@ module.exports = function(config) {
     .markdown();
 
   unit.render();
-  unit.clean();
+  unit.cleanTmp();
 }

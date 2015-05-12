@@ -30,7 +30,7 @@ var modules = {
     return resp.content;
   },*/
   bundle: function(content, options, wp, globalOptions, htmlDest) {
-    return bundle.parse(content, wp, htmlDest);
+    return bundle.parse(content,options, wp, htmlDest);
   },
   handlebars: function(content, options) {
     return handlebars.parse(content, options);
@@ -159,7 +159,11 @@ function Webler(files, options) {
 
   }
 
-  this.clean = function() {
+  this.cleanDest = function() {
+    utils.deleteFolder(wp.vp.vDest());
+  }
+
+  this.cleanTmp = function() {
     utils.deleteFolder(options.temp);
   }
 }
@@ -232,5 +236,26 @@ module.exports = {
     var files = solveGlobs(globs, options.src, options.dest);
 
     return new Webler(files, options);
+  },
+  init:function(name){
+    if (!name) {
+      if (fs.existsSync('webler.js') && !argv.force) {
+        system.exitWithMessage('webler.js already exists use --force to overwrite')
+      }
+
+      var weblerPath = path.dirname(require.resolve('webler'));
+
+      var base = path.join(weblerPath, '../init/default');
+      var files = glob.sync('**/*.*', {
+        cwd: base
+      });
+
+      for (var i in files) {
+        var content = fs.readFileSync(path.join(base, files[i]));
+        utils.safeWriteFile(files[i], content);
+      }
+
+    }
+
   }
 }
