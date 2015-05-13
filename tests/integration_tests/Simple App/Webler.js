@@ -20,8 +20,8 @@ function registerBundles(bundles) {
     .include('sass', '~/Pages/Home/contact2.scss')
 }
 
-module.exports = function(config) {
-  var unit = this.weble({
+module.exports.develop = function(webler) {
+  var unit = webler.weble({
     src: 'src',
     dest: 'release',
     globs: {

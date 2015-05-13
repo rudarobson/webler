@@ -12,10 +12,10 @@
   "bugs": {
     "url": "https://github.com/rudarobson/webler/issues"
   },
-  "main": "bin/webler.js",
+  "main": "lib/webler.js",
   "bin": {
-    "weble": "bin/weble_launcher",
-    "webler": "bin/launcher"
+    "weble": "bin/weble",
+    "webler": "bin/webler"
   },
   "preferGlobal": true,
   "dependencies": {
@@ -28,6 +28,7 @@
     "marked": "^0.3.3",
     "mkdirp": "^0.5.0",
     "node-sass": "^3.0.0-beta.7",
+    "node-watch": "^0.3.4",
     "uglify-js": "^2.4.20",
     "yargs": "^3.7.2"
   }

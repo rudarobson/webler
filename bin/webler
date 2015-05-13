@@ -1,0 +1,21 @@
+#! /usr/bin/env node
+
+var yargs = require('yargs')
+  .usage('Usage: webler <command> option')
+  .help('h')
+  .alias('h', 'help');
+
+
+var argv = yargs.argv;
+
+if (argv.help) {
+  console.log(yargs.help());
+}
+
+var _ = argv._;
+
+var command = _[0];
+_.splice(0, 1);//remove the command
+var launcher = require('./launcher');
+
+launcher[command](argv);

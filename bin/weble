@@ -1,0 +1,15 @@
+#! /usr/bin/env node
+
+var yargs = require('yargs')
+  .usage('Usage: weble option')
+  .help('h')
+  .alias('h', 'help');
+
+
+var argv = yargs.argv;
+
+if (argv.help) {
+  console.log(yargs.help());
+}
+
+require('./launcher').weble(argv);

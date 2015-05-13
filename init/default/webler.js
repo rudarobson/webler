@@ -7,8 +7,8 @@ function registerBundles(bundles) {
   **/
 }
 
-module.exports.develop = function() {
-  var unit = this.weble({
+module.exports.develop = function(webler) {
+  var unit = webler.weble({
     src: 'src', //~ will be substituted by this path when is a source file
     dest: 'dev', //~ will be substituted by this path when is a destination file
     globs: {
@@ -35,8 +35,8 @@ module.exports.develop = function() {
   unit.cleanTmp();
 }
 
-module.exports.release = function() {
-  var unit = this.weble({
+module.exports.release = function(webler) {
+  var unit = webler.weble({
     src: 'src', //~ will be substituted by this path when is a source file
     dest: 'dist', //~ will be substituted by this path when is a destination file
     globs: {

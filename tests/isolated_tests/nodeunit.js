@@ -1,5 +1,5 @@
 var fs = require('fs');
-var webler = require('../../bin/webler');
+var webler = require('webler');
 
 function assertFiles(assert, files, description) {
   for (var j in files) {

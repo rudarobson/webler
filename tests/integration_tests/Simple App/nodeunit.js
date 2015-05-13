@@ -1,5 +1,5 @@
 var fs = require('fs');
-var webler = require('../../../bin/webler');
+var webler = require('webler');
 var glob = require('glob');
 var path = require('path');
 
