@@ -27,7 +27,7 @@ function test(assert, tests, moduleName) {
 
     unitOfCompilation.compile()[moduleName](test.options);
     unitOfCompilation.render();
-    unitOfCompilation.clean();
+    unitOfCompilation.cleanTmp();
 
     assertFiles(assert, test.assert, test.description);
   }
@@ -111,7 +111,7 @@ module.exports.bundle = function(assert) {
 
     unitOfCompilation.compile().bundle(test.options.module);
     unitOfCompilation.render();
-    unitOfCompilation.clean();
+    unitOfCompilation.cleanTmp();
 
     bundleApi.bundles().bundles = {}; //clean registered bundles
     assertFiles(assert, test.assert, test.description);
