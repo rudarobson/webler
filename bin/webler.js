@@ -6,6 +6,8 @@ var razor = require('../lib/razor/razor');
 var bundle = require('../lib/bundle/bundle');
 var tasker = require('../lib/build/tasker');
 
+var time = require('../lib/utils/time');
+
 var fs = require('fs');
 var utils = require('../lib/utils/utils.js');
 var vpCreator = require('../lib/utils/virtualPath.js');
@@ -15,20 +17,6 @@ var glob = require('glob');
 var htmlmin = require('html-minifier').minify;
 
 var modules = {
-  /*build: function(content, options, globalOptions, src, dst) {
-    var resp = build.parse(content, options, src, dst);
-    var tasks = resp.tasks;
-
-    for (var i in tasks) {
-      var task = tasks[i];
-      for (var j in task) {
-        var res = tasker.exec(i, task[j].sources, task[j].options);
-        utils.safeWriteFile(task[j].dest, res);
-      }
-    }
-
-    return resp.content;
-  },*/
   bundle: function(content, options, wp, globalOptions, htmlDest) {
     return bundle.parse(content,options, wp, htmlDest);
   },
@@ -156,7 +144,7 @@ function Webler(files, options) {
       }
       utils.safeWriteFile(curFiles[i].dest, options.htmlMiniier(res));
     }
-
+    //time.show();
   }
 
   this.cleanDest = function() {
