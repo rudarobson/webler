@@ -18,7 +18,7 @@ var htmlmin = require('html-minifier').minify;
 
 var modules = {
   bundle: function(content, options, wp, globalOptions, htmlDest) {
-    return bundle.parse(content,options, wp, htmlDest);
+    return bundle.parse(content, options, wp, htmlDest);
   },
   handlebars: function(content, options) {
     return handlebars.parse(content, options);
@@ -82,6 +82,14 @@ function Webler(files, options) {
       return parsers;
     },
     bundle: function(opt) {
+      if (options && options.debug) {
+        if (!opt)
+          opt = {};
+
+        if (!('debug' in opt))
+          opt.debug = options.debug;
+      }
+
       addToPipeline('bundle', opt);
       return parsers;
     },
@@ -134,6 +142,7 @@ function Webler(files, options) {
 
     for (var i in curFiles) {
       var res = fs.readFileSync(curFiles[i].src).toString();
+
       for (var j in pipelineOrder) {
         var pipeline = pipelineOrder[j];
 
@@ -142,7 +151,11 @@ function Webler(files, options) {
           wp, options,
           curFiles[i].dest);
       }
-      utils.safeWriteFile(curFiles[i].dest, options.htmlMiniier(res));
+
+      if (!options.debug)
+        res = options.htmlMiniier(res);
+
+      utils.safeWriteFile(curFiles[i].dest, res);
     }
     //time.show();
   }
@@ -225,7 +238,7 @@ module.exports = {
 
     return new Webler(files, options);
   },
-  init:function(name){
+  init: function(name) {
     if (!name) {
       if (fs.existsSync('webler.js') && !argv.force) {
         system.exitWithMessage('webler.js already exists use --force to overwrite')
