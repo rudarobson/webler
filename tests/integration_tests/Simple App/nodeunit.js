@@ -4,7 +4,7 @@ var glob = require('glob');
 var path = require('path');
 
 module.exports.SimpleApp = function(assert) {
-  var web = require('./Webler.js').call(webler, 'release');
+  var web = require('./webler.js').develop(webler);
   var srcs = '**/*.*';
   var expected = glob.sync(srcs, {
     cwd: 'expected/release'

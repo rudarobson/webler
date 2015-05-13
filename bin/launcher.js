@@ -12,23 +12,6 @@ function weble(argv) {
   f[config](webler);
 }
 
-function watch(argv) {
-  var watch = require('node-watch');
-  var webler = require('webler');
-  var path = require('path');
-  var srcDir = argv._[0];
-
-  console.log('Wathing ' + srcDir + '...');
-  watch(srcDir, function(filename) {
-    webler.cleanUp();
-    if (filename) {
-      console.log('Changes to: ' + filename);
-    }
-    var f = require(path.join(process.cwd(), 'webler.js'));
-    f.develop(webler);
-  });
-}
-
 function init(argv) {
   var name = (_.length > 0) ? _[0] : undefined;
   var fs = require('fs');
@@ -50,6 +33,29 @@ function init(argv) {
       utils.safeWriteFile(files[i], content);
     }
   }
+}
+
+function watch(argv) {
+  var watch = require('node-watch');
+  var webler = require('webler');
+  var path = require('path');
+  var srcDir = argv._[0];
+  var configName;
+  if (argv._.length > 1)
+    configName = argv._[1];
+  else
+    configName = 'develop';
+
+  console.log('Watching ' + srcDir + '...');
+  watch(srcDir, function(filename) {
+    webler.cleanUp();
+    if (filename) {
+      console.log('Changes to: ' + filename);
+    }
+    
+    var f = require(path.join(process.cwd(), 'webler.js'));
+    f[configName](webler);
+  });
 }
 
 module.exports = {
