@@ -20,6 +20,7 @@ function watch(argv) {
 
   console.log('Wathing ' + srcDir + '...');
   watch(srcDir, function(filename) {
+    webler.cleanUp();
     if (filename) {
       console.log('Changes to: ' + filename);
     }
