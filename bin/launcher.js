@@ -51,8 +51,9 @@ function watch(argv) {
     webler.cleanUp();
     if (filename) {
       console.log('Changes to: ' + filename);
+      console.log('');
     }
-    
+
     var f = require(path.join(process.cwd(), 'webler.js'));
     f[configName](webler);
   });

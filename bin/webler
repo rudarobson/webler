@@ -1,10 +1,16 @@
 #! /usr/bin/env node
 
 var yargs = require('yargs')
-  .usage('Usage: webler <command> option')
+  .usage('Usage: webler <command> [options]')
   .help('h')
-  .alias('h', 'help');
+  .alias('h', 'help')
 
+  .command('watch')
+  .demand(1,'<directory> [configuration]')
+
+
+  .command('weble')
+  .demand(1,'<configuration>');
 
 var argv = yargs.argv;
 
