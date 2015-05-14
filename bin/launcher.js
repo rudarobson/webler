@@ -48,14 +48,20 @@ function watch(argv) {
 
   console.log('Watching ' + srcDir + '...');
   watch(srcDir, function(filename) {
-    webler.cleanUp();
-    if (filename) {
-      console.log('Changes to: ' + filename);
-      console.log('');
-    }
+    try {
+      webler.cleanUp();
+      if (filename) {
+        console.log('Changes to: ' + filename);
+        console.log('');
+      }
 
-    var f = require(path.join(process.cwd(), 'webler.js'));
-    f[configName](webler);
+      var f = require(path.join(process.cwd(), 'webler.js'));
+      f[configName](webler);
+    } catch (ex) {
+      console.log('');
+      console.log('Exception thrown:');
+      console.log(ex);
+    }
   });
 }
 
