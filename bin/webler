@@ -6,11 +6,14 @@ var yargs = require('yargs')
   .alias('h', 'help')
 
   .command('watch')
-  .demand(1,'<directory> [configuration]')
+  //.demand(1,'<directory> [configuration]')
 
 
   .command('weble')
-  .demand(1,'<configuration>');
+//  .demand(1,'<configuration>')
+
+  .command('init')
+  //.demand(0)
 
 var argv = yargs.argv;
 

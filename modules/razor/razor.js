@@ -1,10 +1,22 @@
 var exec = require('child_process').execFileSync;
 var path = require('path');
-var utils = require('../utils/utils');
-var system = require('../utils/system');
+var utils = require('../../utils/utils');
+var system = require('../../utils/system');
 var os = require('os');
+
 module.exports = {
-  parse: function(files, options, wp) {
+  config:function(){
+    if (opt) {
+      var toResolve = ['layoutsPath', 'modelsPath', 'viewBagsPath'];
+
+      for (var i in toResolve) {
+        if (opt[toResolve[i]]) {
+          opt[toResolve[i]] = wp.vp.resolveSrc(opt[toResolve[i]]);
+        }
+      }
+    }
+  },
+  start: function(files, options, wp) {
     var tmpDir = wp.tp.dir();
 
     var opt = {};
@@ -65,6 +77,6 @@ module.exports = {
     return destPaths;
   },
   cleanUp:function(){
-    
+
   }
 };

@@ -13,25 +13,34 @@ function weble(argv) {
 }
 
 function init(argv) {
-  var name = (_.length > 0) ? _[0] : undefined;
+  var path = require('path');
   var fs = require('fs');
+  var glob = require('glob');
+  var log = require('../lib/utils/log');
+  var utils = require('../lib/utils/utils');
+  var system = require('../lib/utils/system');
+  var name = (argv.length > 0) ? _[0] : undefined;
 
-  if (!name) {
-    if (fs.existsSync('webler.js') && !argv.force) {
-      system.exitWithMessage('webler.js already exists use --force to overwrite')
-    }
+  if (fs.existsSync('webler.js') && !argv.force) {
+    log.error('webler.js already exists use --force to overwrite');
+    system.exit();
+  }
 
-    var weblerPath = path.dirname(require.resolve('webler'));
+  var name;
+  if (argv._.length > 0)
+    name = argv._[0];
+  if (!name)
+    name = 'webler';
 
-    var base = path.join(weblerPath, '../init/default');
-    var files = glob.sync('**/*.*', {
-      cwd: base
-    });
+  var weblerPath = path.dirname(require.resolve('webler'));
+  var base = path.join(weblerPath, '../init', name);
+  var files = glob.sync('**/*.*', {
+    cwd: base
+  });
 
-    for (var i in files) {
-      var content = fs.readFileSync(path.join(base, files[i]));
-      utils.safeWriteFile(files[i], content);
-    }
+  for (var i in files) {
+    var content = fs.readFileSync(path.join(base, files[i]));
+    utils.safeWriteFile(files[i], content);
   }
 }
 
