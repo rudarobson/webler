@@ -39,6 +39,8 @@ function watch(argv) {
   var watch = require('node-watch');
   var webler = require('webler');
   var path = require('path');
+  var colors = require('colors');
+
   var srcDir = argv._[0];
   var configName;
   if (argv._.length > 1)
@@ -59,7 +61,7 @@ function watch(argv) {
       f[configName](webler);
     } catch (ex) {
       console.log('');
-      console.log('Exception thrown:');
+      console.log(colors.red('Exception thrown:'));
       console.log(ex);
     }
   });
