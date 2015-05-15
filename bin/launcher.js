@@ -21,11 +21,6 @@ function init(argv) {
   var system = require('../lib/utils/system');
   var name = (argv.length > 0) ? _[0] : undefined;
 
-  if (fs.existsSync('webler.js') && !argv.force) {
-    log.error('webler.js already exists use --force to overwrite');
-    system.exit();
-  }
-
   var name;
   if (argv._.length > 0)
     name = argv._[0];
@@ -44,10 +39,11 @@ function init(argv) {
 
   if (fs.existsSync(initFile)) { //execute file initalizer
     require(initFile)({
+      base: base,
+      force: argv.force || false,
+      log: log,
       glob: glob,
-      require: function(name) {
-        return require(path.join(base, name))
-      }
+      mkdirp: require('mkdirp')
     });
   } else { //just copy packages files
     var cwd = path.join(base, 'package');

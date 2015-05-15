@@ -4,12 +4,22 @@ var utils = require('../../lib/utils/utils');
 var system = require('../../lib/utils/system');
 var os = require('os');
 
+var defaults = {
+  layoutsPath:'~layouts',
+  modelsPath:'~models',
+  viewBagsPath:'~viewbags',
+};
+
 module.exports = {
   type: 'bulk',
+  config:defaults,
   start: function(input, wManager) {
     var wp = wManager.wp;
 
     var opt = {};
+
+    utils.mergeObjects(opt, defaults);
+
     if (wManager.options)
       utils.mergeObjects(opt, wManager.options);
 
