@@ -9,7 +9,7 @@ module.exports = {
   config: function() {
 
   },
-  start: function(files, wManager) {
+  start: function(input, wManager) {
     var wp = wManager.wp;
 
     var opt = {};
@@ -29,24 +29,24 @@ module.exports = {
     var pages = [];
 
 
-    for (var i in files) {
+    for (var i in input) {
 
-      var file = files[i];
-      if (path.basename(file.content) === '_ViewStart.cshtml')
+      var file = input[i];
+      if (path.basename(file.value) === '_ViewStart.cshtml')
         continue;
 
-      var noExtName = utils.changeFileExt(path.basename(file.content), '');
+      var noExtName = utils.changeFileExt(path.basename(file.value), '');
       var fName = wp.tp.generatePath();
-      
+
       pages.push({
-        source: file.content,
+        source: file.value,
         originalSource: file.wFile.src,
         destination: fName,
         model: noExtName + '.model.json',
         viewBag: noExtName + '.viewbag.json'
       });
 
-      files[i].content = fName;
+      input[i].value = fName;
     }
 
     opt.pages = pages;
@@ -78,5 +78,6 @@ module.exports = {
   },
   cleanUp: function() {
 
-  }
+  },
+  api:undefined
 };

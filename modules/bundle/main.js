@@ -4,10 +4,10 @@ var sass = require('node-sass');
 
 var fs = require('fs');
 var path = require('path');
-var utils = require('../utils/utils');
-var time = require('../utils/time');
-var system = require('../utils/system');
-var log = require('../utils/log');
+var utils = require('../../lib/utils/utils');
+var time = require('../../lib/utils/time');
+var system = require('../../lib/utils/system');
+var log = require('../../lib/utils/log');
 var os = require('os');
 
 var supportedTypes = {
@@ -259,8 +259,8 @@ function renderBundle(type, key, wp, isDebug, opt) {
     var bundle = checkBundleAndGetFiles(type, key);
 
     if (log.dev.isEnabled(0)) {
-      log.dev.normal('',0);
-      log.dev.normal('sources:',0);
+      log.dev.normal('', 0);
+      log.dev.normal('sources:', 0);
       for (var i in bundle.files) {
         log.dev.normal(bundle.files[i].src, 0)
       }
@@ -275,10 +275,20 @@ function renderBundle(type, key, wp, isDebug, opt) {
   return alreadyRendered[type + '_' + key];
 }
 
-var bundleApi = {
-  parse: function(content, options, wp, htmlDest) {
+
+
+module.exports = {
+  type: 'stream',
+  start: function(input, wManager) {
     log.verbose.normal('Bundling...');
     log.verbose.normal('');
+
+    var content = wManager.convert(input, 'string');
+    var options = wManager.options;
+    var wp = wManager.wp;
+    var htmlDest = input.wFile.dest;
+
+
     var opt = {};
     utils.mergeObjects(opt, options);
 
@@ -336,16 +346,19 @@ var bundleApi = {
       content = content.replace(toReplace[i].old, toReplace[i].new);
     }
 
-    return content;
+    input.type = 'string';
+    input.value = content;
+  },
+  config: function() {
+
   },
   cleanUp: function() {
     alreadyRendered = {};
     alreadyCopiedFiles = {};
   },
-  bundles: function() {
-    return collection;
+  api: {
+    bundles: function() {
+      return collection;
+    }
   }
-
 };
-
-module.exports = bundleApi;
