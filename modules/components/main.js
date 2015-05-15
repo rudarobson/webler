@@ -2,7 +2,7 @@ var fs = require('fs');
 var path = require('path');
 var loader = require('./parser');
 var glob = require('glob');
-var utils = require('../utils/utils');
+var utils = require('../../lib/utils/utils');
 var defaults = {
   componentsPath: null, //this is a required attribute, where to find components
   componentsExt: '.html',
@@ -225,7 +225,13 @@ function _parse(rawCnt, options) {
 
 
 module.exports = {
-  parse: function(cnt, options) {
+  type: 'stream',
+  config: function() {
+
+  },
+  start: function(input, wManager) {
+    var options = wManager.options;
+    var cnt = wManager.convert(input, 'string');
     templates = {}; //reset templates
     var opt = {};
     if (!options)
@@ -238,7 +244,11 @@ module.exports = {
       }
     }
 
-    return _parse(cnt, opt);
+    if (opt.componentsPath)
+      opt.componentsPath = wManager.wp.vp.resolveSrc(opt.componentsPath);
+
+    input.type = 'string';
+    input.value = _parse(cnt, opt);
   },
   cleanUp: function() {
     templates = {};
