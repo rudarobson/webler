@@ -3,15 +3,17 @@
   "version": "0.0.1004",
   "description": "Web application assembler",
   "keywords": [
+    "webler",
     "web",
     "tool",
-    "assembler"
+    "assembler",
+    "compiler",
+    "html",
+    "minifier",
+    "compressor"
   ],
   "author": "Rudá Robson",
   "type": "Copyright 2015 Rudá Robson",
-  "bugs": {
-    "url": "https://github.com/rudarobson/webler/issues"
-  },
   "main": "lib/webler.js",
   "bin": {
     "weble": "bin/weble",
@@ -22,9 +24,7 @@
     "cheerio": "^0.19.0",
     "clean-css": "^3.2.3",
     "colors": "^1.1.0",
-    "glob": "^5.0.5",
-    "handlebars": "^3.0.2",
-    "handlebars-layouts": "^2.0.1",
+    "glob-expand": "^0.1.0",
     "html-minifier": "^0.7.2",
     "marked": "^0.3.3",
     "mkdirp": "^0.5.0",
