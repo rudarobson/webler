@@ -15,7 +15,7 @@ function weble(argv) {
 function init(argv) {
   var path = require('path');
   var fs = require('fs');
-  var glob = require('glob');
+  var glob = require('glob-expand');
   var log = require('../lib/utils/log');
   var utils = require('../lib/utils/utils');
   var system = require('../lib/utils/system');
@@ -32,15 +32,34 @@ function init(argv) {
   if (!name)
     name = 'webler';
 
-  var weblerPath = path.dirname(require.resolve('webler'));
-  var base = path.join(weblerPath, '../init', name);
-  var files = glob.sync('**/*.*', {
-    cwd: base
-  });
+  var base;
+  if (/^\.?\.?(\/|\\)/.test(name)) { //relative
+    base = path.join(process.cwd(), name);
+  } else {
+    var weblerPath = path.dirname(require.resolve('webler'));
+    base = path.join(weblerPath, '../init', name);
+  }
 
-  for (var i in files) {
-    var content = fs.readFileSync(path.join(base, files[i]));
-    utils.safeWriteFile(files[i], content);
+  var initFile = path.join(base, 'init.js');
+
+  if (fs.existsSync(initFile)) { //execute file initalizer
+    require(initFile)({
+      glob: glob,
+      require: function(name) {
+        return require(path.join(base, name))
+      }
+    });
+  } else { //just copy packages files
+    var cwd = path.join(base, 'package');
+    var files = glob({
+      cwd: cwd,
+      filter: 'isFile'
+    }, '**/*.*');
+
+    for (var i in files) {
+      var content = fs.readFileSync(path.join(cwd, files[i]));
+      utils.safeWriteFile(files[i], content);
+    }
   }
 }
 
