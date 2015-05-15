@@ -349,9 +349,6 @@ module.exports = {
     input.type = 'string';
     input.value = content;
   },
-  config: function() {
-
-  },
   cleanUp: function() {
     alreadyRendered = {};
     alreadyCopiedFiles = {};

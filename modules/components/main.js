@@ -4,7 +4,7 @@ var loader = require('./parser');
 var glob = require('glob');
 var utils = require('../../lib/utils/utils');
 var defaults = {
-  componentsPath: null, //this is a required attribute, where to find components
+  componentsPath: '~Components', //this is a required attribute, where to find components
   componentsExt: '.html',
   attrAction: 'merge', //can be merge or replace
   attrs: {},
@@ -112,28 +112,6 @@ function endsWith(str, suffix) {
   return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }
 
-/*function _attrEngine(mergeInto, additionalAttrs, action, attrsToMerge, attrsToReplace) {
-	for (var i in additionalAttrs) {
-		if (mergeInto[i]) {
-			if (action == 'replace') {
-				if (i in attrsToMerge) //specific attribute to merge instead of replace
-					mergeInto[i] = mergeInto[i] + ' ' + additionalAttrs[i];
-				else
-					mergeInto[i] = additionalAttrs[i];
-			} else if (action == 'merge') {
-				if (i in attrsToReplace) //specific attribute to replace instead of merge
-					mergeInto[i] = mergeInto[i];
-				else
-					mergeInto[i] = mergeInto[i] + ' ' + additionalAttrs[i];
-			} else {
-				throw 'Attribute action not recognized';
-			}
-		} else { //just add the attribute
-			mergeInto[i] = additionalAttrs[i];
-		}
-	}
-}*/
-
 function _attrEngine(mergeInto, additionalAttrs, action, attrs) {
   if (!attrs)
     attrs = {};
@@ -226,23 +204,16 @@ function _parse(rawCnt, options) {
 
 module.exports = {
   type: 'stream',
-  config: function() {
-
-  },
+  config: defaults,
   start: function(input, wManager) {
     var options = wManager.options;
     var cnt = wManager.convert(input, 'string');
     templates = {}; //reset templates
     var opt = {};
-    if (!options)
-      opt = utils.mergeObjects(opt, defaults);
-    else {
-      utils.mergeObjects(opt, options);
-      for (var i in defaults) {
-        if (!(i in opt))
-          opt[i] = defaults[i];
-      }
-    }
+    utils.mergeObjects(opt, defaults);
+
+    if (options)
+      opt = utils.mergeObjects(opt, options);
 
     if (opt.componentsPath)
       opt.componentsPath = wManager.wp.vp.resolveSrc(opt.componentsPath);

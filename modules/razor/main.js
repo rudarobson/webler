@@ -6,9 +6,6 @@ var os = require('os');
 
 module.exports = {
   type: 'bulk',
-  config: function() {
-
-  },
   start: function(input, wManager) {
     var wp = wManager.wp;
 
@@ -75,9 +72,5 @@ module.exports = {
       system.exit(1);
     }
 
-  },
-  cleanUp: function() {
-
-  },
-  api:undefined
+  }
 };
