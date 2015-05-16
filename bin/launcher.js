@@ -36,21 +36,20 @@ function init(argv) {
     var weblerPath = path.dirname(require.resolve('webler'));
     base = path.join(weblerPath, '../init', name);
   }
-  var vp = vpCreator(base,'./');
+  var vp = vpCreator(base, './');
 
-  var initFile = vp.resolveSrc('~init.js');// path.join(base, 'init.js');
+  var initFile = vp.resolveSrc('~init.js'); // path.join(base, 'init.js');
 
   if (fs.existsSync(initFile)) { //execute file initalizer
     require(initFile)({
-      base: base,
       force: argv.force || false,
       log: log,
+      vp: vp,
       glob: glob,
-      vp:vp,
       mkdirp: require('mkdirp')
     });
   } else { //just copy packages files
-    var cwd = vp.resolveSrc('~package');// path.join(base, 'package');
+    var cwd = vp.resolveSrc('~package'); // path.join(base, 'package');
     var files = glob({
       cwd: cwd,
       filter: 'isFile'

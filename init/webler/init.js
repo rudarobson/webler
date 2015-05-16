@@ -2,7 +2,7 @@ var path = require('path');
 var fs = require('fs');
 
 module.exports = function(manager) {
-  var cwd = manager.vp.resolveSrc('~package');//path.join(manager.base, 'package');
+  var cwd = manager.vp.resolveSrc('~package');
   var files = manager.glob({
     cwd: cwd,
     filter: 'isFile'
