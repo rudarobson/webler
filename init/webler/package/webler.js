@@ -12,7 +12,12 @@ module.exports.develop = function(webler) {
 
   registerBundles(webler.api('bundle').bundles);
 
-  webler.cleanDest().weble().razor().bundle();
+  webler.cleanDest().weble({
+    globs:{
+      cwd:'~pages',
+      src:'**/*.html'
+    }
+  }).razor().bundle();
 
   webler.render().cleanUp().cleanTmp();
 }
