@@ -3,16 +3,6 @@ var path = require('path');
 var loader = require('./parser');
 var glob = require('glob-expand');
 var utils = require('../../lib/utils/utils');
-var defaults = {
-  componentsPath: '~Components', //this is a required attribute, where to find components
-  componentsExt: '.html',
-  attrAction: 'merge', //can be merge or replace
-  attrs: {},
-  stopOnNotFound: true,
-  validateName: function(name) {
-    return /^[a-z0-9]+(?:-[a-z0-9]+)+$/i.test(name);
-  }
-};
 
 var templates = {};
 
@@ -204,17 +194,22 @@ function _parse(rawCnt, options) {
 
 module.exports = {
   type: 'stream',
-  config: defaults,
+  config: {
+    componentsPath: '~Components', //this is a required attribute, where to find components
+    componentsExt: '.html',
+    attrAction: 'merge', //can be merge or replace
+    attrs: {},
+    stopOnNotFound: true,
+    validateName: function(name) {
+      return /^[a-z0-9]+(?:-[a-z0-9]+)+$/i.test(name);
+    }
+  },
   start: function(input, wManager) {
     var options = wManager.options;
     var cnt = wManager.convert(input, 'string');
     templates = {}; //reset templates
-    var opt = {};
-    utils.mergeObjects(opt, defaults);
+    var opt = wManager.options;
 
-    if (options)
-      utils.mergeObjects(opt, options);
-      
     if (opt.componentsPath)
       opt.componentsPath = wManager.wp.vp.resolveSrc(opt.componentsPath);
 

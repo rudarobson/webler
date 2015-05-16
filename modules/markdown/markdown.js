@@ -16,6 +16,5 @@ module.exports = {
       cnt = cnt.replace(startMatch[0], html);
     }
     return cnt;
-  },
-  api: undefined
+  }
 }

@@ -23,15 +23,6 @@ var supportedTypes = {
   }
 }
 
-var defaults = {
-  styles: {
-    sass: {
-      includePaths: []
-    }
-  }
-};
-
-
 var collection = new BundleCollection();
 
 var bundleRegex = {
@@ -298,9 +289,7 @@ module.exports = {
     var htmlDest = input.wFile.dest;
 
 
-    var opt = {};
-    utils.mergeObjects(opt, defaults);
-    utils.mergeObjects(opt, options);
+    var opt = wManager.options;
 
     var newSassIncludes = [];
     var oldIncludes = opt.styles.sass.includePaths;
@@ -366,10 +355,17 @@ module.exports = {
     input.type = 'string';
     input.value = content;
   },
-  config: defaults,
+  config: {
+    styles: {
+      sass: {
+        includePaths: []
+      }
+    }
+  },
   cleanUp: function() {
     alreadyRendered = {};
     alreadyCopiedFiles = {};
+    collection = new BundleCollection();
   },
   api: {
     bundles: function() {
