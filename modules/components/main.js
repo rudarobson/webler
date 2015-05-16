@@ -1,7 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var loader = require('./parser');
-var glob = require('glob');
+var glob = require('glob-expand');
 var utils = require('../../lib/utils/utils');
 var defaults = {
   componentsPath: '~Components', //this is a required attribute, where to find components
@@ -84,9 +84,9 @@ function _parseConfiguraion(src, options) {
       }
 
       if (isDirectory) {
-        var files = glob.sync('**/*' + options.componentsExt, {
+        var files = glob({
           cwd: options.componentsPath
-        });
+        }, ['**/*' + options.componentsExt]);
 
         for (var i in files) {
           var pathWithoutExt = files[i].slice(0, -(options.componentsExt.length)); //trim extension
@@ -213,8 +213,8 @@ module.exports = {
     utils.mergeObjects(opt, defaults);
 
     if (options)
-      opt = utils.mergeObjects(opt, options);
-
+      utils.mergeObjects(opt, options);
+      
     if (opt.componentsPath)
       opt.componentsPath = wManager.wp.vp.resolveSrc(opt.componentsPath);
 

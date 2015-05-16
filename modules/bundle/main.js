@@ -23,40 +23,13 @@ var supportedTypes = {
   }
 }
 
-function BundleCollection() {
-  this.bundles = {}
-
-  this.add = function(type, key) {
-    if (!supportedTypes[type])
-      system.exitWithMessage('Type: ' + type + ' is not supported!');
-
-    var bundle = new Bundle(type, key);
-
-    if (!this.bundles[type])
-      this.bundles[type] = {};
-
-    this.bundles[type][key] = bundle;
-
-    return bundle;
+var defaults = {
+  styles: {
+    sass: {
+      includePaths: []
+    }
   }
-}
-
-function Bundle(type, key) {
-  this.files = [];
-  this.type = type;
-  this.key = key;
-  this.include = function(type, src) {
-    if (!type)
-      type = 'js';
-
-    this.files.push({
-      type: type,
-      src: src
-    });
-
-    return this;
-  }
-}
+};
 
 
 var collection = new BundleCollection();
@@ -76,60 +49,6 @@ var copyBundleRegex = {
   }
 };
 
-function defineReference(type, htmlDestDir, tag, destRef, wp, isDebug, generatedFiles) {
-  if (isDebug) {
-    var tags = '';
-
-    for (var i in generatedFiles) {
-      var filePath = generatedFiles[i];
-      var relPath = path.relative(htmlDestDir, filePath);
-      var ret;
-      if (path.isAbsolute(relPath)) { //cannot be replace by a relative path
-        log.dev.error('not implemented exception bundles.js absolutePath for debuging')
-        system.exit(system.exitCodes.error);
-      } else { //can be replace by a relative path
-        ret = relPath;
-      }
-
-      var ref = ret.replace(/\\/g, '/');
-      tags += tag.replace(destRef, ref) + os.EOL
-    }
-
-    return tags;
-  } else {
-    var relPath = path.relative(htmlDestDir, wp.vp.resolveDest(destRef))
-    var ret;
-    if (path.isAbsolute(relPath)) { //cannot be replace by a relative path
-      ret = '/' + wp.vp.trim(destRef);
-    } else { //can be replace by a relative path
-      ret = relPath;
-    }
-
-    var ref = ret.replace(/\\/g, '/');
-    return tag.replace(destRef, ref);
-  }
-}
-
-function generateUniquePathInDir(prefix, fileName, dir) {
-  var generated = path.join(dir, fileName);
-  if (!utils.fileExists(generated)) {
-    return generated;
-  }
-
-  generated = path.join(dir, prefix + '.' + fileName);
-
-  if (!utils.fileExists(generated)) {
-    return generated;
-  }
-
-  var counter = 0;
-
-  while (utils.fileExists(generated)) {
-    generated = generated + '_' + counter;
-  }
-
-  return generated;
-}
 
 var renderes = {
   scripts: function(files, key, opt, wp, isDebug) {
@@ -277,6 +196,96 @@ function renderBundle(type, key, wp, isDebug, opt) {
 
 
 
+function BundleCollection() {
+  this.bundles = {}
+
+  this.add = function(type, key) {
+    if (!supportedTypes[type])
+      system.exitWithMessage('Type: ' + type + ' is not supported!');
+
+    var bundle = new Bundle(type, key);
+
+    if (!this.bundles[type])
+      this.bundles[type] = {};
+
+    this.bundles[type][key] = bundle;
+
+    return bundle;
+  }
+}
+
+function Bundle(type, key) {
+  this.files = [];
+  this.type = type;
+  this.key = key;
+  this.include = function(type, src) {
+    if (!type)
+      type = 'js';
+
+    this.files.push({
+      type: type,
+      src: src
+    });
+
+    return this;
+  }
+}
+
+function defineReference(type, htmlDestDir, tag, destRef, wp, isDebug, generatedFiles) {
+  if (isDebug) {
+    var tags = '';
+
+    for (var i in generatedFiles) {
+      var filePath = generatedFiles[i];
+      var relPath = path.relative(htmlDestDir, filePath);
+      var ret;
+      if (path.isAbsolute(relPath)) { //cannot be replace by a relative path
+        log.dev.error('not implemented exception bundles.js absolutePath for debuging')
+        system.exit(system.exitCodes.error);
+      } else { //can be replace by a relative path
+        ret = relPath;
+      }
+
+      var ref = ret.replace(/\\/g, '/');
+      tags += tag.replace(destRef, ref) + os.EOL
+    }
+
+    return tags;
+  } else {
+    var relPath = path.relative(htmlDestDir, wp.vp.resolveDest(destRef))
+    var ret;
+    if (path.isAbsolute(relPath)) { //cannot be replace by a relative path
+      ret = '/' + wp.vp.trim(destRef);
+    } else { //can be replace by a relative path
+      ret = relPath;
+    }
+
+    var ref = ret.replace(/\\/g, '/');
+    return tag.replace(destRef, ref);
+  }
+}
+
+function generateUniquePathInDir(prefix, fileName, dir) {
+  var generated = path.join(dir, fileName);
+  if (!utils.fileExists(generated)) {
+    return generated;
+  }
+
+  generated = path.join(dir, prefix + '.' + fileName);
+
+  if (!utils.fileExists(generated)) {
+    return generated;
+  }
+
+  var counter = 0;
+
+  while (utils.fileExists(generated)) {
+    generated = generated + '_' + counter;
+  }
+
+  return generated;
+}
+
 module.exports = {
   type: 'stream',
   start: function(input, wManager) {
@@ -290,7 +299,15 @@ module.exports = {
 
 
     var opt = {};
+    utils.mergeObjects(opt, defaults);
     utils.mergeObjects(opt, options);
+
+    var newSassIncludes = [];
+    var oldIncludes = opt.styles.sass.includePaths;
+    for (var i in oldIncludes) {
+      newSassIncludes.push(wp.vp.resolveSrc(oldIncludes[i]));
+    }
+    opt.styles.sass.includePaths = newSassIncludes;
 
     var obj;
     var vSrc = wp.vp.vSrc();
@@ -301,7 +318,7 @@ module.exports = {
     var match;
     var toReplace = [];
     var htmlDestDir = path.dirname(htmlDest);
-    var isDebug = opt.debug || false;
+    var isDebug = wManager.gOptions.debug || false;
 
     for (var i in bundleRegex) {
       var regex = bundleRegex[i]();
@@ -349,6 +366,7 @@ module.exports = {
     input.type = 'string';
     input.value = content;
   },
+  config: defaults,
   cleanUp: function() {
     alreadyRendered = {};
     alreadyCopiedFiles = {};

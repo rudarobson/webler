@@ -10,7 +10,7 @@ function registerBundles(bundles) {
 module.exports.develop = function(webler) {
   webler.loadModule('razor').loadModule('bundle');
 
-  registerBundles(webler.api('bundle').bundles);
+  registerBundles(webler.api('bundle').bundles());
 
   webler.cleanDest().weble({
     globs:{
