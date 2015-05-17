@@ -258,7 +258,9 @@ function defineReference(type, htmlDestDir, tag, destRef, wp, isDebug, generated
 
 function generateUniquePathInDir(prefix, fileName, dir) {
   var generated = path.join(dir, fileName);
-  if (!utils.fileExists(generated)) {
+  return generated;
+  //on running watch was generting lots of files
+  /*if (!utils.fileExists(generated)) {
     return generated;
   }
 
@@ -274,7 +276,7 @@ function generateUniquePathInDir(prefix, fileName, dir) {
     generated = generated + '_' + counter;
   }
 
-  return generated;
+  return generated;*/
 }
 
 module.exports = {
