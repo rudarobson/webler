@@ -34,7 +34,7 @@ function init(argv) {
     base = path.join(process.cwd(), name);
   } else {
     var weblerPath = path.dirname(require.resolve('webler'));
-    base = path.join(weblerPath, '../init', name);
+    base = path.join(weblerPath, '../packages/init', name);
   }
   var vp = vpCreator(base, './');
 

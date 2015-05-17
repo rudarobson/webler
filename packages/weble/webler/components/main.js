@@ -2,7 +2,7 @@ var fs = require('fs');
 var path = require('path');
 var loader = require('./parser');
 var glob = require('glob-expand');
-var utils = require('../../lib/utils/utils');
+var utils = require('../../../../lib/utils/utils');
 
 var templates = {};
 

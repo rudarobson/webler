@@ -1,7 +1,7 @@
 var exec = require('child_process').execFileSync;
 var path = require('path');
-var utils = require('../../lib/utils/utils');
-var system = require('../../lib/utils/system');
+var utils = require('../../../../lib/utils/utils');
+var system = require('../../../../lib/utils/system');
 var os = require('os');
 
 
@@ -56,7 +56,7 @@ module.exports = {
     var configFilePath = wp.tp.write(JSON.stringify(opt));
 
     var rootPackagePath = path.dirname(require.resolve('webler')) //bin folder
-    var exePath = path.join(rootPackagePath, '../modules/razor/bin/WeblerRazor.exe');
+    var exePath = path.join(rootPackagePath, '../packages/weble/webler/razor/bin/WeblerRazor.exe');
 
     var cmd;
     var args;

@@ -1,0 +1,7 @@
+{
+  "weble": {
+    "razor": ["webler"],
+    "components": ["webler"],
+    "bundle": ["webler"]
+  }
+}

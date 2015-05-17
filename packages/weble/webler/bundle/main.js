@@ -4,10 +4,10 @@ var sass = require('node-sass');
 
 var fs = require('fs');
 var path = require('path');
-var utils = require('../../lib/utils/utils');
-var time = require('../../lib/utils/time');
-var system = require('../../lib/utils/system');
-var log = require('../../lib/utils/log');
+var utils = require('../../../../lib/utils/utils');
+var time = require('../../../../lib/utils/time');
+var system = require('../../../../lib/utils/system');
+var log = require('../../../../lib/utils/log');
 var os = require('os');
 
 var supportedTypes = {
