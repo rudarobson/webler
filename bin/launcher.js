@@ -64,9 +64,12 @@ function init(argv) {
 
 function watch(argv) {
   var watch = require('node-watch');
-  var webler = require('webler');
+  var scopeCreator = require('../lib/weblerScopeCreator');
   var path = require('path');
   var colors = require('colors');
+  var globule = require('globule');
+  var vpCreator = require('../lib/utils/virtualPath');
+  var solveGlobs = require('../lib/fileSolver');
 
   var srcDir = argv._[0];
   var configName;
@@ -77,8 +80,13 @@ function watch(argv) {
 
   console.log('Watching ' + srcDir + '...');
   watch(srcDir, function(filename) {
+
     try {
-      webler.cleanUp();
+      var webler = scopeCreator({
+        fileSolver: function(globs, srcRoot, destRoot) {
+          return solveGlobs(globs,srcRoot,destRoot,filename);
+        }
+      })
       if (filename) {
         console.log('Changes to: ' + filename);
         console.log('');

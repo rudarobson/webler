@@ -13,9 +13,9 @@ module.exports.develop = function(webler) {
   registerBundles(webler.api('bundle').bundles());
 
   webler.cleanDest().weble({
-    globs:{
-      cwd:'~pages',
-      src:'**/*.html'
+    globs: {
+      cwd: '~pages',
+      src: ['**/*.@(html|cshtml)', '!**/_ViewStart.cshtml']//ignore _ViewStart.cshtml for razor
     }
   }).razor().bundle();
 
