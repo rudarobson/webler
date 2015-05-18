@@ -40,6 +40,9 @@ var copyBundleRegex = {
   }
 };
 
+var wsRegex = function() {
+  return /@import[\s]*['"]([\s\S]*?)['"];/g;
+};
 
 var renderes = {
   scripts: function(files, key, opt, wp, isDebug) {
@@ -65,6 +68,26 @@ var renderes = {
             renderedFiles.push(generatedPath);
           } else {
             pureScriptsFiles.push(src);
+          }
+          break;
+        case 'weblerscript':
+        case 'ws':
+          var imports = fs.readFileSync(src).toString();
+          var match;
+          var regex = wsRegex();
+          while ((match = regex.exec(imports))) {
+            if (isDebug) {
+              var generatedPath = generateUniquePathInDir(
+                utils.changeFileExt(path.basename(destCode), ''),
+                path.basename(wp.vp.resolveSrc(match[1])),
+                path.dirname(destCode)
+              );
+
+              utils.safeWriteFile(generatedPath, fs.readFileSync(wp.vp.resolveSrc(match[1])).toString());
+              renderedFiles.push(generatedPath);
+            } else {
+              pureScriptsFiles.push(wp.vp.resolveSrc(match[1]));
+            }
           }
           break;
       }
