@@ -52,7 +52,7 @@ function justCopyFiles(files, destCode, ext) {
     );
 
     gen.push(generatedPath);
-    utils.safeWriteFile(utils.changeFileExt(generatedPath, ext), fs.readFileSync(file.tmp));
+    utils.safeWriteFile(utils.changeFileExt(generatedPath, ext), fs.readFileSync(file.temp));
   }
   return gen;
 }
@@ -219,7 +219,7 @@ function renderBundle(type, key, wp, isDebug, opt) {
 
       var temp = fileProcessor[fileType](src, isDebug, option, wp);
       toCompress.push({
-        old: src,
+        src: src,
         temp: temp
       });
     }
