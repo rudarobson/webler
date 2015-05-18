@@ -196,7 +196,7 @@ module.exports = {
   type: 'stream',
   config: {
     componentsPath: '~Components', //this is a required attribute, where to find components
-    componentsExt: '.html',
+    componentsExt: '.component',
     attrAction: 'merge', //can be merge or replace
     attrs: {},
     stopOnNotFound: true,
