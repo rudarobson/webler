@@ -4,9 +4,8 @@ var loader = require('./parser');
 var glob = require('glob-expand');
 var utils = require('../../../../lib/utils/utils');
 
-var templates = {};
 
-function _registerTemplate(name, path, options) {
+function _registerTemplate(name, path, options, templates) {
   if (templates[name] && templates[name].path != path) {
     var message = 'Tag already registered with a different path\nregistered: ' + templates[name].path + '\ntrying to register: ' + path;
     console.log(message);
@@ -28,74 +27,20 @@ function _validateTagNameAnThrow(alias, options) {
   }
 }
 
-function _loadTemplate(name, options) {
+function _loadTemplate(name, options, templates) {
   if (templates[name]) {
     if (!templates[name].cnt) {
-      var newPath = path.join(options.componentsPath, templates[name].path + options.componentsExt);
+      var newPath = path.join(templates[name].path + options.componentsExt);
       templates[name].cnt = fs.readFileSync(newPath).toString();
     }
 
-    return templates[name].cnt;
+    return templates[name];
   } else {
     var message = 'Tag ' + name + ' not found!';
     //do not remove this log
     console.log(message);
     throw message;
   }
-}
-
-function _parseConfiguraion(src, options) {
-  var configRegex = /<!--\s*components:([\w\W]*?)-->\t*(?:\r?\n)?/i;
-
-  var cntMatch = configRegex.exec(src);
-  var newSrc;
-  if (cntMatch) {
-    var cnt = cntMatch[1];
-    var imports = /import\s*([^\s]+)(?:\s*as\s*([^\s]+))?\s*;/ig;
-    var match;
-    while (match = imports.exec(cnt)) {
-      var alias;
-      var cmpPath;
-
-      if (match[2]) {
-        alias = match[2];
-        cmpPath = match[1];
-      } else {
-        alias = path.basename(match[1]);
-        cmpPath = match[1];
-      }
-
-      var isDirectory = false;
-      var dir = path.join(options.componentsPath, cmpPath);
-      try {
-        isDirectory = fs.lstatSync(dir).isDirectory();
-      } catch (e) {
-
-      }
-
-      if (isDirectory) {
-        var files = glob({
-          cwd: options.componentsPath
-        }, ['**/*' + options.componentsExt]);
-
-        for (var i in files) {
-          var pathWithoutExt = files[i].slice(0, -(options.componentsExt.length)); //trim extension
-          var newAlias = path.basename(pathWithoutExt);
-          _validateTagNameAnThrow(newAlias, options);
-
-          _registerTemplate(newAlias, pathWithoutExt, options);
-        }
-      } else {
-        _validateTagNameAnThrow(alias, options);
-        _registerTemplate(alias, cmpPath, options);
-      }
-    }
-    newSrc = src.replace(cntMatch[0], '');
-  } else
-    newSrc = src;
-
-
-  return newSrc
 }
 
 function endsWith(str, suffix) {
@@ -124,7 +69,7 @@ function _attrEngine(mergeInto, additionalAttrs, action, attrs) {
   }
 }
 
-function _parseTagWithContent(template, cnt, options) {
+function _parseTagWithContent(currentSrcPath, template, cnt, options, templates) {
   var $template = loader(template);
   var $tag = loader(cnt);
 
@@ -151,21 +96,83 @@ function _parseTagWithContent(template, cnt, options) {
   $template('content').remove();
   var html = $template.html();
 
-  return _parse(html, options);
+  return _parse(currentSrcPath, html, options, templates);
 }
 
-function _parse(rawCnt, options) {
-  var cnt = _parseConfiguraion(rawCnt, options);
 
-  var reg = new RegExp('<(\\w+(?:-\\w+)+)[^>]*>', 'g');
-  var match;
 
-  var $ = loader(cnt);
-  var allHyphenTags = '';
-  match = reg.exec(cnt);
+function _parseConfiguraion(currentSrcPath, src, options, templates) {
+  var configRegex = /<!--\s*components:([\w\W]*?)-->\t*(?:\r?\n)?/i;
+
+  var cntMatch = configRegex.exec(src);
+  var newSrc;
+  if (cntMatch) {
+    var cnt = cntMatch[1];
+    var imports = /#?import\s*([^\s]+)(?:\s*as\s*([^\s]+))?\s*;/ig;
+    var match;
+    while (match = imports.exec(cnt)) {
+      var alias;
+      var cmpPath;
+
+      if (match[2]) {
+        alias = match[2];
+        cmpPath = match[1];
+      } else {
+        alias = path.basename(match[1]);
+        cmpPath = match[1];
+      }
+
+
+      var isDirectory = false;
+      var dir;
+      if (match[0][0] == '#') {
+        dir = path.join(path.dirname(currentSrcPath), cmpPath);
+      } else {
+        dir = path.join(options.componentsPath, cmpPath);
+
+      }
+      try {
+        isDirectory = fs.lstatSync(dir).isDirectory();
+      } catch (e) {
+
+      }
+
+      if (isDirectory) {
+        var files = glob({
+          cwd: dir
+        }, ['**/*' + options.componentsExt]);
+
+        for (var i in files) {
+          var pathWithoutExt = files[i].slice(0, -(options.componentsExt.length)); //trim extension
+          var newAlias = path.basename(pathWithoutExt);
+          _validateTagNameAnThrow(newAlias, options);
+
+          _registerTemplate(newAlias, path.join(dir, pathWithoutExt), options, templates);
+        }
+      } else {
+        _validateTagNameAnThrow(alias, options);
+        _registerTemplate(alias, dir, options, templates);
+      }
+    }
+    newSrc = src.replace(cntMatch[0], '');
+  } else
+    newSrc = src;
+
+
+  return newSrc
+}
+
+
+function _parse(currentSrcPath, rawCnt, options, templates) {
+  var cnt = _parseConfiguraion(currentSrcPath, rawCnt, options, templates);
+
+  var reg = /<(\w+(?:-\w+)+)[^>]*?>/g;
+  var match = reg.exec(cnt);
 
   if (match) {
-    allHyphenTags = match[1];
+    var $ = loader(cnt);
+
+    var allHyphenTags = match[1];
 
     while (match = reg.exec(cnt))
       allHyphenTags += ',' + match[1];
@@ -175,10 +182,10 @@ function _parse(rawCnt, options) {
     $(allHyphenTags).each(function() {
       var tagName = this.tagName;
       var $this = $(this);
-
-      var newElt = _parseTagWithContent(_loadTemplate(tagName, options), $.html($this), options);
+      var template = _loadTemplate(tagName, options, templates);
+      var newElt = _parseTagWithContent(template.path, template.cnt, $.html($this), options, templates);
       toReplace.push([$this, $(newElt)]);
-    })
+    });
 
     for (var i in toReplace) {
       $(toReplace[i][0]).replaceWith(toReplace[i][1]);
@@ -207,16 +214,12 @@ module.exports = {
   start: function(input, wManager) {
     var options = wManager.options;
     var cnt = wManager.convert(input, 'string');
-    templates = {}; //reset templates
     var opt = wManager.options;
 
     if (opt.componentsPath)
       opt.componentsPath = wManager.wp.vp.resolveSrc(opt.componentsPath);
 
     input.type = 'string';
-    input.value = _parse(cnt, opt);
-  },
-  cleanUp: function() {
-    templates = {};
+    input.value = _parse(input.wFile.src, cnt, opt, {});
   }
 };
