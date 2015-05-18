@@ -2,7 +2,8 @@
   "weble": {
     "razor": ["webler"],
     "components": ["webler"],
-    "bundle": ["webler"]
+    "bundle": ["webler"],
+    "markdown": ["webler"]
   },
   "init": {
     "webler": ["webler"],
