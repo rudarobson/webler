@@ -9,6 +9,7 @@ var time = require('../../../../lib/utils/time');
 var system = require('../../../../lib/utils/system');
 var log = require('../../../../lib/utils/log');
 var os = require('os');
+var weblerScript = require('../../../../lib/weblerscript');
 
 var supportedTypes = {
   scripts: {
@@ -40,9 +41,7 @@ var copyBundleRegex = {
   }
 };
 
-var wsRegex = function() {
-  return /@import[\s]*['"]([\s\S]*?)['"];/g;
-};
+
 
 var renderes = {
   scripts: function(files, key, opt, wp, isDebug) {
@@ -72,21 +71,22 @@ var renderes = {
           break;
         case 'weblerscript':
         case 'ws':
-          var imports = fs.readFileSync(src).toString();
-          var match;
-          var regex = wsRegex();
-          while ((match = regex.exec(imports))) {
+          var srcs = weblerScript.parse(src, {
+            vSrc: wp.vp.vSrc(),
+            vDest: wp.vp.vDest()
+          });
+          for (var i in srcs) {
             if (isDebug) {
               var generatedPath = generateUniquePathInDir(
                 utils.changeFileExt(path.basename(destCode), ''),
-                path.basename(wp.vp.resolveSrc(match[1])),
+                path.basename(srcs[i]),
                 path.dirname(destCode)
               );
 
-              utils.safeWriteFile(generatedPath, fs.readFileSync(wp.vp.resolveSrc(match[1])).toString());
+              utils.safeWriteFile(generatedPath, fs.readFileSync(srcs[i]).toString());
               renderedFiles.push(generatedPath);
             } else {
-              pureScriptsFiles.push(wp.vp.resolveSrc(match[1]));
+              pureScriptsFiles.push(srcs[i]);
             }
           }
           break;
