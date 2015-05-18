@@ -51,8 +51,9 @@ function justCopyFiles(files, destCode, ext) {
       path.dirname(destCode)
     );
 
+    generatedPath = utils.changeFileExt(generatedPath, ext);
     gen.push(generatedPath);
-    utils.safeWriteFile(utils.changeFileExt(generatedPath, ext), fs.readFileSync(file.temp));
+    utils.safeWriteFile(generatedPath, fs.readFileSync(file.temp));
   }
   return gen;
 }
