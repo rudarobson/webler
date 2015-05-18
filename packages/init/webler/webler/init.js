@@ -3,10 +3,10 @@ var fs = require('fs');
 
 module.exports = function(manager) {
   var cwd = manager.vp.resolveSrc('~package');
-  var files = manager.glob({
-    cwd: cwd,
+  var files = manager.glob.find(['**/*.*'],{
+    srcBase: cwd,
     filter: 'isFile'
-  }, ['**/*.*']);
+  });
 
   for (var i in files) {
     if (fs.existsSync(files[i]) && !manager.force) {

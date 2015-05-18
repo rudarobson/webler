@@ -15,14 +15,14 @@ function weble(argv) {
 function init(argv) {
   var path = require('path');
   var fs = require('fs');
-  var glob = require('glob-expand');
+  var glob = require('globule');
   var log = require('../lib/utils/log');
   var utils = require('../lib/utils/utils');
   var system = require('../lib/utils/system');
   var vpCreator = require('../lib/utils/virtualPath');
 
   var name = (argv.length > 0) ? _[0] : undefined;
-
+  var userName = (argv.length > 1) ? _[1] : 'webler';
   var name;
   if (argv._.length > 0)
     name = argv._[0];
@@ -34,7 +34,7 @@ function init(argv) {
     base = path.join(process.cwd(), name);
   } else {
     var weblerPath = path.dirname(require.resolve('webler'));
-    base = path.join(weblerPath, '../packages/init', name);
+    base = path.join(weblerPath, '../packages/init',userName, name);
   }
   var vp = vpCreator(base, './');
 
@@ -84,7 +84,7 @@ function watch(argv) {
     try {
       var webler = scopeCreator({
         fileSolver: function(globs, srcRoot, destRoot) {
-          return solveGlobs(globs,srcRoot,destRoot,filename);
+          return solveGlobs(globs, srcRoot, destRoot, filename);
         }
       })
       if (filename) {

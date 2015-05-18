@@ -14,7 +14,7 @@ module.exports.develop = function(webler) {
 
   webler.cleanDest().weble({
     globs: {
-      cwd: '~pages',
+      cwd: '~pages', //do not include layouts folder
       src: ['**/*.@(html|cshtml)', '!**/_ViewStart.cshtml']//ignore _ViewStart.cshtml for razor
     }
   }).razor().bundle();

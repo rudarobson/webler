@@ -3,5 +3,9 @@
     "razor": ["webler"],
     "components": ["webler"],
     "bundle": ["webler"]
+  },
+  "init": {
+    "webler": ["webler"],
+    "module": ["module"]
   }
 }
