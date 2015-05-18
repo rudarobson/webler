@@ -41,125 +41,72 @@ var copyBundleRegex = {
   }
 };
 
+function justCopyFiles(files, destCode, ext) {
+  var gen = [];
+  for (var i in files) {
+    var file = files[i];
+    var generatedPath = generateUniquePathInDir(
+      utils.changeFileExt(path.basename(destCode), ''),
+      path.basename(file.src),
+      path.dirname(destCode)
+    );
 
-
-var renderes = {
-  scripts: function(files, key, opt, wp, isDebug) {
-    var pureScriptsFiles = [];
-    var renderedFiles = []
-    var destCode = wp.vp.resolveDest(key);
-
-    for (var i in files) {
-      var file = files[i];
-      var src = wp.vp.resolveSrc(file.src);
-
-      switch (file.type) {
-        case 'javascript':
-        case 'js':
-          if (isDebug) {
-            var generatedPath = generateUniquePathInDir(
-              utils.changeFileExt(path.basename(destCode), ''),
-              path.basename(file.src),
-              path.dirname(destCode)
-            );
-
-            utils.safeWriteFile(generatedPath, fs.readFileSync(src).toString());
-            renderedFiles.push(generatedPath);
-          } else {
-            pureScriptsFiles.push(src);
-          }
-          break;
-        case 'weblerscript':
-        case 'ws':
-          var srcs = weblerScript.parse(src, {
-            vSrc: wp.vp.vSrc(),
-            vDest: wp.vp.vDest()
-          });
-          for (var i in srcs) {
-            if (isDebug) {
-              var generatedPath = generateUniquePathInDir(
-                utils.changeFileExt(path.basename(destCode), ''),
-                path.basename(srcs[i]),
-                path.dirname(destCode)
-              );
-
-              utils.safeWriteFile(generatedPath, fs.readFileSync(srcs[i]).toString());
-              renderedFiles.push(generatedPath);
-            } else {
-              pureScriptsFiles.push(srcs[i]);
-            }
-          }
-          break;
-      }
-    }
-
-    if (!isDebug) {
-      utils.safeWriteFile(destCode, ujs.minify(pureScriptsFiles).code);
-      renderedFiles.push(destCode);
-    }
-
-    return renderedFiles;
-  },
-  styles: function(files, key, opt, wp, isDebug) {
-    var pureStylesFiles = [];
-    var renderedFiles = []
-    var tmpFile;
-    var destCode = wp.vp.resolveDest(key);
-    var curOpt;
-    for (var i in files) {
-      var file = files[i];
-      var src = wp.vp.resolveSrc(file.src);
-
-      switch (file.type) {
-        case 'css':
-          if (isDebug) {
-            var generatedPath = generateUniquePathInDir(
-              utils.changeFileExt(path.basename(destCode), ''),
-              path.basename(file.src),
-              path.dirname(destCode)
-            );
-
-            utils.safeWriteFile(generatedPath, fs.readFileSync(src).toString());
-            renderedFiles.push(generatedPath);
-          } else {
-            pureStylesFiles.push(wp.vp.resolveSrc(file.src));
-          }
-
-          break;
-        case 'sass':
-          curOpt = {};
-          if (opt.styles && opt.styles.sass)
-            utils.mergeObjects(curOpt, opt.styles.sass);
-          curOpt.file = wp.vp.resolveSrc(file.src);
-
-          var sassRes = sass.renderSync(curOpt);
-
-          if (isDebug) {
-            var generatedPath = generateUniquePathInDir(
-              utils.changeFileExt(path.basename(destCode), ''),
-              path.basename(utils.changeFileExt(file.src, '.css')),
-              path.dirname(destCode)
-            );
-
-            utils.safeWriteFile(generatedPath, sassRes.css);
-            renderedFiles.push(generatedPath);
-          } else {
-            tmpFile = wp.tp.write(sassRes.css);
-            pureStylesFiles.push(tmpFile);
-          }
-          break;
-      }
-    }
-
-    if (!isDebug) {
-      var result = new ccss().minify(utils.concatFiles(pureStylesFiles)).styles;
-      utils.safeWriteFile(destCode, result);
-      renderedFiles.push(destCode);
-    }
-
-    return renderedFiles;
+    gen.push(generatedPath);
+    utils.safeWriteFile(utils.changeFileExt(generatedPath, ext), fs.readFileSync(file.tmp));
   }
-};
+  return gen;
+}
+
+
+var processors = {
+  scripts: {
+    javascript: function(src) {
+      return src;
+    }
+  },
+  styles: {
+    css: function(src) {
+      return src;
+    },
+    sass: function(src, isDebug, opt, wp) {
+      var curOpt = {};
+      if (opt)
+        utils.mergeObjects(curOpt, opt);
+
+      curOpt.file = wp.vp.resolveSrc(src);
+
+      var sassRes = sass.renderSync(curOpt);
+
+      return wp.tp.write(sassRes.css);
+    }
+  }
+}
+
+
+var compressors = {
+  scripts: function(files, isDebug, destCode) {
+    if (isDebug) {
+      return justCopyFiles(files, destCode, '.js');
+    }
+    var f = [];
+    for (var i in files)
+      f.push(files[i].temp);
+    utils.safeWriteFile(utils.changeFileExt(destCode, '.js'), ujs.minify(f).code);
+    return [destCode];
+
+  },
+  styles: function(files, isDebug, destCode) {
+    if (isDebug) {
+      return justCopyFiles(files, destCode, '.css');
+    }
+    var f = [];
+    for (var i in files)
+      f.push(files[i].temp);
+    var result = new ccss().minify(utils.concatFiles(f)).styles;
+    utils.safeWriteFile(utils.changeFileExt(destCode, '.css'), result);
+    return [destCode];
+  }
+}
 
 var copyRenderer = function(ref, wp, isDebug) {
   var filePath = wp.vp.resolveDest(ref);
@@ -185,9 +132,23 @@ function checkBundleAndGetFiles(type, key) {
 
 var alreadyRendered = {};
 var alreadyCopiedFiles = {};
-
+/*
+ * @param type is scripts, styles
+ * @param key is the destination path
+ */
 function renderBundle(type, key, wp, isDebug, opt) {
+  var pureScriptsFiles = [];
+  var renderedFiles = []
+  var destCode = wp.vp.resolveDest(key);
+
   if (!alreadyRendered[type + '_' + key]) {
+
+
+    if (type != 'styles' && type != 'scripts') {
+      log.error('bundle: ' + type + ' is not supported');
+      system.exit(-1);
+    }
+
     log.verbose.normal('Rendering bundle:[' + type + '] .' + key, 0);
     var bundle = checkBundleAndGetFiles(type, key);
 
@@ -195,20 +156,81 @@ function renderBundle(type, key, wp, isDebug, opt) {
       log.dev.normal('', 0);
       log.dev.normal('sources:', 0);
       for (var i in bundle.files) {
-        log.dev.normal(bundle.files[i].src, 0)
+        log.dev.normal(bundle.files[i].src, 0);
       }
     }
 
-    alreadyRendered[type + '_' + key] = renderes[type](bundle.files, key, opt, wp, isDebug);
+    var files = bundle.files;
 
+    var defaultFileType;
+    switch (type) {
+      case 'scripts':
+        defaultFileType = 'javascript';
+        break;
+      case 'styles':
+        defaultFileType = 'css';
+        break;
+    }
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      if (file.type == 'ws' || file.type == 'weblerscript') { //expand the webler script
+        var srcs = weblerScript.parse(file.src, {
+          vSrc: wp.vp.vSrc(),
+          vDest: wp.vp.vDest()
+        });
+
+        files.splice(i, 1);
+
+        for (var j in srcs) {
+          files.splice(i, 0, srcs[j]);
+          if (!srcs[j].type)
+            srcs[j].type = defaultFileType;
+        }
+        i += srcs.length; //skip files added
+      }
+    }
+
+    var toCompress = [];
+
+    for (var i in files) {
+      var file = files[i]; //file.type is css,sass, javascript etc...
+      var src = wp.vp.resolveSrc(file.src);
+
+      var fileProcessor = processors[type];
+      var fileType;
+      switch (files[i].type) {
+        case 'js':
+        case 'javascript':
+          fileType = 'javascript';
+          break;
+        default:
+          fileType = files[i].type;
+      }
+
+      if (!fileProcessor[fileType]) {
+        log.error('bundle: ' + type + ' does not support ' + fileType + ' file type at bundle: ' + key);
+        system.exit(-1);
+      }
+
+
+      var option = {};
+      if (opt && opt[type] && opt[type][fileType])
+        option = opt[type][fileType];
+
+      var temp = fileProcessor[fileType](src, isDebug, option, wp);
+      toCompress.push({
+        old: src,
+        temp: temp
+      });
+    }
+
+
+    alreadyRendered[type + '_' + key] = compressors[type](toCompress, isDebug, destCode);
     log.verbose.normal('', 0);
   }
 
-
   return alreadyRendered[type + '_' + key];
 }
-
-
 
 function BundleCollection() {
   this.bundles = {}
@@ -282,24 +304,6 @@ function defineReference(type, htmlDestDir, tag, destRef, wp, isDebug, generated
 function generateUniquePathInDir(prefix, fileName, dir) {
   var generated = path.join(dir, fileName);
   return generated;
-  //on running watch was generting lots of files
-  /*if (!utils.fileExists(generated)) {
-    return generated;
-  }
-
-  generated = path.join(dir, prefix + '.' + fileName);
-
-  if (!utils.fileExists(generated)) {
-    return generated;
-  }
-
-  var counter = 0;
-
-  while (utils.fileExists(generated)) {
-    generated = generated + '_' + counter;
-  }
-
-  return generated;*/
 }
 
 module.exports = {
