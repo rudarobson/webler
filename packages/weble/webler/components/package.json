@@ -1,7 +1,5 @@
 {
   "dependencies": {
-    "dom-serializer": "0",
-    "domelementtype": "1",
     "domutils": "^1.5.1",
     "glob-expand": "^0.1.0",
     "parse5": "^1.4.2"

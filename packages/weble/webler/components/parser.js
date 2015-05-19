@@ -58,12 +58,21 @@ module.exports = {
       }
     }
   },
+  placeAllChildrenBefore: function(ref, elt) {
+    for (var i in elt.children)
+      this.insertBefore(ref, elt.children[i]);
+  },
   serialize: function(elt) {
     return domutils.getOuterHTML(elt);
-    //return  require('./serializer/index')(elt);
   },
   attr: function(elem, name) {
     return elem.attribs[name];
+  },
+  hasAttr: function(elem, name) {
+    return name in elem.attribs;
+  },
+  deleteAttr: function(elem, name) {
+    delete elem.attribs[name];
   },
   insertBefore: function(elem, newElem) {
     var prev = newElem.prev = elem.prev;

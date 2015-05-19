@@ -3,16 +3,16 @@ var path = require('path');
 var loader = require('./parser');
 var glob = require('glob-expand');
 var parser = require('./parser');
-var domutils = require('domutils');
 
 function isIgnored($tag, options, remove) {
   var attribs = $tag.attribs;
-  for (var i in attribs) {
-    if (i == options.ignoreAttribute) {
-      if (remove)
-        delete attribs[i];
-      return true;
-    }
+  var attr = options.ignoreAttribute;
+  if (!attr)
+    return false;
+
+  if (parser.hasAttr($tag, attr)) {
+    parser.deleteAttr($tag, attr);
+    return true;
   }
   return false;
 }
@@ -143,7 +143,7 @@ function _parseConfiguraion(currentSrcPath, src, options, templates) {
   return newSrc
 }
 
-function _parseTagWithContent(currentSrcPath, template, cnt, options, templates, $) {
+function _parseTagWithContent(currentSrcPath, template, cnt, options, templates, root) {
   var $template = parser.parse(template);
   var $tag = parser.parse(cnt);
 
@@ -179,12 +179,12 @@ function _parseTagWithContent(currentSrcPath, template, cnt, options, templates,
             parser.insertBefore(content, elt); //this must be after remove
           });
         } else {
-          parser.insertBefore(content, $tag);
+          parser.placeAllChildrenBefore(content,$tag);
           allPlacedInContentGenericTag = true; //must break everything was placed inside content
         }
       }
     }
-    parser.removeElement(content);
+    parser.removeElement(content);//remove content tag
   }
 
   var html = parser.serialize($template); //$template.html();
@@ -206,25 +206,25 @@ function _parse(currentSrcPath, rawCnt, options, templates) {
     while (match = reg.exec(cnt))
       allHyphenTags += ',' + match[1];
 
-    var toReplace = [];
+
     parser.forEachSel(allHyphenTags, document, function(elt) {
+
       var tagName = elt.name;
 
       if (!isIgnored(elt, options, true)) {
         var template = _loadTemplate(tagName, options, templates);
 
-        var newElt = _parseTagWithContent(template.path, template.cnt, parser.serialize(elt), options, templates, document);
+        var newElt = _parseTagWithContent(template.path, template.cnt, parser.serialize(elt), options, templates);
 
+        console.log(parser.serialize(elt.parent));
         parser.insertBefore(elt, parser.parse(newElt));
         parser.removeElement(elt);
+        console.log(parser.serialize(elt.parent));
+
       }
     });
 
-    for (var i in toReplace) {
-      console.log(toReplace);
-      $(toReplace[i][0]).replaceWith(toReplace[i][1]);
-    }
-    cnt = parser.serialize(document); // $.html();
+    cnt = parser.serialize(document);
   }
 
   return cnt;
@@ -254,15 +254,6 @@ module.exports = {
     if (opt.componentsPath)
       opt.componentsPath = wManager.wp.vp.resolveSrc(opt.componentsPath);
 
-    /*remove
-    var elem = parser.parse('<div><uterere></uterere></div>');
-    var child = parser.parse('<h1>oi</h1>');
-    console.log(child);
-    parser.insertBefore(elem, child)
-    console.log(parser.serialize(elem));
-
-    throw '';
-    /*remove*/
     input.type = 'string';
     input.value = _parse(input.wFile.src, cnt, opt, {});
   }
