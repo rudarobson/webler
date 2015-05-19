@@ -4,6 +4,18 @@ var loader = require('./parser');
 var glob = require('glob-expand');
 var utils = require('../../../../lib/utils/utils');
 
+function isIgnored($tag, options, remove) {
+
+  var attribs = $tag[0].attribs;
+  for (var i in attribs) {
+    if (i == options.ignoreAttribute) {
+      if(remove)
+        delete attribs[i];
+      return true;
+    }
+  }
+  return false;
+}
 
 function _registerTemplate(name, path, options, templates) {
   if (templates[name] && templates[name].path != path) {
@@ -69,7 +81,7 @@ function _attrEngine(mergeInto, additionalAttrs, action, attrs) {
   }
 }
 
-function _parseTagWithContent(currentSrcPath, template, cnt, options, templates) {
+function _parseTagWithContent(currentSrcPath, template, cnt, options, templates, $) {
   var $template = loader(template);
   var $tag = loader(cnt);
 
@@ -78,22 +90,29 @@ function _parseTagWithContent(currentSrcPath, template, cnt, options, templates)
 
   _attrEngine(templateAttrs, tagAttrs, options.attrAction, options.attrs);
 
+  var toRemove = [];
   $template('content').each(function() {
-    var content = this;
+    var $this = $template(this);
+    if (!isIgnored($this, options,true)) {
+      toRemove.push($this);
+      var content = this;
+      var select = $this.attr('select');
 
-    var select = $template(this).attr('select');
-
-    if (select) {
-      $tag.root().children().first().children(select).each(function() {
-        $template(content).before($tag.html(this).trim());
-      }).remove();
-    } else {
-      $template(content).before($tag.root().children().first().html().trim());
-      return false; //must break everything was placed inside content
+      if (select) {
+        $tag.root().children().first().children(select).each(function() {
+          //$template(content).before($tag.html(this).trim());
+          $this.before($tag.html(this).trim());
+        }).remove();
+      } else {
+        $template(content).before($tag.root().children().first().html().trim());
+        return false; //must break everything was placed inside content
+      }
     }
   });
 
-  $template('content').remove();
+  for (var i in toRemove)
+    toRemove[i].remove();
+  //$template('content').remove();
   var html = $template.html();
 
   return _parse(currentSrcPath, html, options, templates);
@@ -182,9 +201,12 @@ function _parse(currentSrcPath, rawCnt, options, templates) {
     $(allHyphenTags).each(function() {
       var tagName = this.tagName;
       var $this = $(this);
-      var template = _loadTemplate(tagName, options, templates);
-      var newElt = _parseTagWithContent(template.path, template.cnt, $.html($this), options, templates);
-      toReplace.push([$this, $(newElt)]);
+
+      if (!isIgnored($this, options,true)) {
+        var template = _loadTemplate(tagName, options, templates);
+        var newElt = _parseTagWithContent(template.path, template.cnt, $.html($this), options, templates, $);
+        toReplace.push([$this, $(newElt)]);
+      }
     });
 
     for (var i in toReplace) {
@@ -204,6 +226,7 @@ module.exports = {
   config: {
     componentsPath: '~Components', //this is a required attribute, where to find components
     componentsExt: '.component',
+    ignoreAttribute: 'components-ignore',
     attrAction: 'merge', //can be merge or replace
     attrs: {},
     stopOnNotFound: true,
