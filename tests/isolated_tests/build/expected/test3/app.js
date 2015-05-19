@@ -1,1 +1,0 @@
-!function(){var a="dir/relative.js";alert(a)}(),function(){var a="/absolute.js";alert(a)}();

@@ -1,1 +1,0 @@
-!function(){var t="subdir/type.js";alert(t)}(),function(){var t="no-type.js";alert(t)}(),function(){var t="np-type-absolute.js";alert(t)}();

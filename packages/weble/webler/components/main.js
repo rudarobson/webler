@@ -2,14 +2,14 @@ var fs = require('fs');
 var path = require('path');
 var loader = require('./parser');
 var glob = require('glob-expand');
-var utils = require('../../../../lib/utils/utils');
+var parser = require('./parser');
+var domutils = require('domutils');
 
 function isIgnored($tag, options, remove) {
-
-  var attribs = $tag[0].attribs;
+  var attribs = $tag.attribs;
   for (var i in attribs) {
     if (i == options.ignoreAttribute) {
-      if(remove)
+      if (remove)
         delete attribs[i];
       return true;
     }
@@ -81,44 +81,6 @@ function _attrEngine(mergeInto, additionalAttrs, action, attrs) {
   }
 }
 
-function _parseTagWithContent(currentSrcPath, template, cnt, options, templates, $) {
-  var $template = loader(template);
-  var $tag = loader(cnt);
-
-  var tagAttrs = $tag.root().children().first()[0].attribs;
-  var templateAttrs = $template.root().children().first()[0].attribs;
-
-  _attrEngine(templateAttrs, tagAttrs, options.attrAction, options.attrs);
-
-  var toRemove = [];
-  $template('content').each(function() {
-    var $this = $template(this);
-    if (!isIgnored($this, options,true)) {
-      toRemove.push($this);
-      var content = this;
-      var select = $this.attr('select');
-
-      if (select) {
-        $tag.root().children().first().children(select).each(function() {
-          //$template(content).before($tag.html(this).trim());
-          $this.before($tag.html(this).trim());
-        }).remove();
-      } else {
-        $template(content).before($tag.root().children().first().html().trim());
-        return false; //must break everything was placed inside content
-      }
-    }
-  });
-
-  for (var i in toRemove)
-    toRemove[i].remove();
-  //$template('content').remove();
-  var html = $template.html();
-
-  return _parse(currentSrcPath, html, options, templates);
-}
-
-
 
 function _parseConfiguraion(currentSrcPath, src, options, templates) {
   var configRegex = /<!--\s*components:([\w\W]*?)-->\t*(?:\r?\n)?/i;
@@ -181,6 +143,54 @@ function _parseConfiguraion(currentSrcPath, src, options, templates) {
   return newSrc
 }
 
+function _parseTagWithContent(currentSrcPath, template, cnt, options, templates, $) {
+  var $template = parser.parse(template);
+  var $tag = parser.parse(cnt);
+
+
+  var tagAttrs = $tag.attribs; //$tag.root().children().first()[0].attribs;
+  var templateAttrs = $template.attribs; //.root().children().first()[0].attribs;
+
+
+  _attrEngine(templateAttrs, tagAttrs, options.attrAction, options.attrs);
+
+  var toRemove = [];
+
+  var contents = [];
+  parser.forEachSel('content', $template, function(content) {
+    contents.push(content);
+  });
+
+
+
+  var allPlacedInContentGenericTag = false;
+  for (var i in contents) {
+    var content = contents[i];
+
+    if (!isIgnored(content, options, true)) {
+
+      if (!allPlacedInContentGenericTag) {
+        var select = parser.attr(content, 'select');
+
+        if (select) {
+          parser.forEachSel(select, $tag, function(elt) {
+            var before = parser.serialize($tag);
+            parser.removeElement(elt); //remove to place the reamaining content inside a generic content tag
+            parser.insertBefore(content, elt); //this must be after remove
+          });
+        } else {
+          parser.insertBefore(content, $tag);
+          allPlacedInContentGenericTag = true; //must break everything was placed inside content
+        }
+      }
+    }
+    parser.removeElement(content);
+  }
+
+  var html = parser.serialize($template); //$template.html();
+
+  return _parse(currentSrcPath, html, options, templates);
+}
 
 function _parse(currentSrcPath, rawCnt, options, templates) {
   var cnt = _parseConfiguraion(currentSrcPath, rawCnt, options, templates);
@@ -189,7 +199,7 @@ function _parse(currentSrcPath, rawCnt, options, templates) {
   var match = reg.exec(cnt);
 
   if (match) {
-    var $ = loader(cnt);
+    var document = parser.parse(cnt);
 
     var allHyphenTags = match[1];
 
@@ -197,22 +207,24 @@ function _parse(currentSrcPath, rawCnt, options, templates) {
       allHyphenTags += ',' + match[1];
 
     var toReplace = [];
+    parser.forEachSel(allHyphenTags, document, function(elt) {
+      var tagName = elt.name;
 
-    $(allHyphenTags).each(function() {
-      var tagName = this.tagName;
-      var $this = $(this);
-
-      if (!isIgnored($this, options,true)) {
+      if (!isIgnored(elt, options, true)) {
         var template = _loadTemplate(tagName, options, templates);
-        var newElt = _parseTagWithContent(template.path, template.cnt, $.html($this), options, templates, $);
-        toReplace.push([$this, $(newElt)]);
+
+        var newElt = _parseTagWithContent(template.path, template.cnt, parser.serialize(elt), options, templates, document);
+
+        parser.insertBefore(elt, parser.parse(newElt));
+        parser.removeElement(elt);
       }
     });
 
     for (var i in toReplace) {
+      console.log(toReplace);
       $(toReplace[i][0]).replaceWith(toReplace[i][1]);
     }
-    cnt = $.html();
+    cnt = parser.serialize(document); // $.html();
   }
 
   return cnt;
@@ -224,7 +236,7 @@ function _parse(currentSrcPath, rawCnt, options, templates) {
 module.exports = {
   type: 'stream',
   config: {
-    componentsPath: '~Components', //this is a required attribute, where to find components
+    componentsPath: '~components', //this is a required attribute, where to find components
     componentsExt: '.component',
     ignoreAttribute: 'components-ignore',
     attrAction: 'merge', //can be merge or replace
@@ -242,6 +254,15 @@ module.exports = {
     if (opt.componentsPath)
       opt.componentsPath = wManager.wp.vp.resolveSrc(opt.componentsPath);
 
+    /*remove
+    var elem = parser.parse('<div><uterere></uterere></div>');
+    var child = parser.parse('<h1>oi</h1>');
+    console.log(child);
+    parser.insertBefore(elem, child)
+    console.log(parser.serialize(elem));
+
+    throw '';
+    /*remove*/
     input.type = 'string';
     input.value = _parse(input.wFile.src, cnt, opt, {});
   }
