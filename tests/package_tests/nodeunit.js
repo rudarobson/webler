@@ -3,24 +3,24 @@ var fs = require('fs');
 var path = require('path');
 
 module.exports.components = function(assert) {
-  var tests_count = 9;
+  var tests_count = 10;
   var test_options = {
 
   };
   webler.loadModule('components');
-  assert.expect(9);
+  assert.expect(tests_count);
   for (var i = 0; i < tests_count; i++) {
     var testName = 'test' + i;
     webler.weble({
-      src: 'components/tests',
-      dest: 'components/tests_results',
+      src: 'components/tests/' + testName,
+      dest: 'components/tests_results/' + testName,
       globs: {
-        cwd: '~' + testName,
+        cwd: '~',
         src: ['*.html'],
         dest: '~'
       }
     }).components({
-      componentsPath: '~/' + testName + '/components'
+      componentsPath: '~components'
     });
 
     webler.render();

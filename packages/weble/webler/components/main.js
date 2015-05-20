@@ -7,25 +7,31 @@ var parser = require('./parser');
 function isIgnored($tag, options, remove) {
   var attribs = $tag.attribs;
   var attr = options.ignoreAttribute;
+
   if (!attr)
     return false;
 
   if (parser.hasAttr($tag, attr)) {
-    parser.deleteAttr($tag, attr);
+    if (remove)
+      parser.deleteAttr($tag, attr);
     return true;
   }
+
   return false;
 }
 
-function _registerTemplate(name, path, options, templates) {
+function _registerTemplate(from, name, path, options, templates) {
   if (templates[name] && templates[name].path != path) {
-    var message = 'Tag already registered with a different path\nregistered: ' + templates[name].path + '\ntrying to register: ' + path;
+    console.log('');
+    console.log('Error while processing: ' + from);
+    var message = 'Tag ' + name + ' already registered at source file:\n\t' + templates[name].from + '\nwith a different path\nregistered: ' + templates[name].path + '\ntrying to register: ' + path;
     console.log(message);
     if (options.stopOnNotFound) //stop if must parse all tags
       throw message;
   }
 
   templates[name] = {
+    from: from,
     path: path,
     cnt: null
   };
@@ -49,7 +55,6 @@ function _loadTemplate(name, options, templates) {
     return templates[name];
   } else {
     var message = 'Tag ' + name + ' not found!';
-    //do not remove this log
     console.log(message);
     throw message;
   }
@@ -82,13 +87,19 @@ function _attrEngine(mergeInto, additionalAttrs, action, attrs) {
 }
 
 
-function _parseConfiguraion(currentSrcPath, src, options, templates) {
+function _parseConfiguraion(currentSrcPath, root, options, templates) {
   var configRegex = /<!--\s*components:([\w\W]*?)-->\t*(?:\r?\n)?/i;
+  var comments = [];
 
-  var cntMatch = configRegex.exec(src);
-  var newSrc;
-  if (cntMatch) {
-    var cnt = cntMatch[1];
+  parser.filter(root, function(elt) {
+    if (elt.type == 'comment') {
+      comments.push(elt.data);
+      parser.removeElement(elt);
+    }
+  });
+
+  for (var i in comments) {
+    var cnt = comments[i];
     var imports = /#?import\s*([^\s]+)(?:\s*as\s*([^\s]+))?\s*;/ig;
     var match;
     while (match = imports.exec(cnt)) {
@@ -128,109 +139,80 @@ function _parseConfiguraion(currentSrcPath, src, options, templates) {
           var newAlias = path.basename(pathWithoutExt);
           _validateTagNameAnThrow(newAlias, options);
 
-          _registerTemplate(newAlias, path.join(dir, pathWithoutExt), options, templates);
+          _registerTemplate(currentSrcPath, newAlias, path.join(dir, pathWithoutExt), options, templates);
         }
       } else {
         _validateTagNameAnThrow(alias, options);
-        _registerTemplate(alias, dir, options, templates);
+        _registerTemplate(currentSrcPath, alias, dir, options, templates);
       }
     }
-    newSrc = src.replace(cntMatch[0], '');
-  } else
-    newSrc = src;
-
-
-  return newSrc
+  }
 }
 
-function _parseTagWithContent(currentSrcPath, template, cnt, options, templates, root) {
-  var $template = parser.parse(template);
-  var $tag = parser.parse(cnt);
+function _parseTagWithContent(currentSrcPath, template, $customElt, options, templates, root) {
+  var $template = parser.parse(template)[0];
+  if (!$template.attribs)
+    $template.attribs = {};
+  if (!$customElt.attribs)
+    $customElt.attribs = {};
 
-
-  var tagAttrs = $tag.attribs; //$tag.root().children().first()[0].attribs;
-  var templateAttrs = $template.attribs; //.root().children().first()[0].attribs;
-
+  var tagAttrs = $customElt.attribs;
+  var templateAttrs = $template.attribs;
 
   _attrEngine(templateAttrs, tagAttrs, options.attrAction, options.attrs);
 
-  var toRemove = [];
-
-  var contents = [];
-  parser.forEachSel('content', $template, function(content) {
-    contents.push(content);
-  });
-
-
-
   var allPlacedInContentGenericTag = false;
-  for (var i in contents) {
-    var content = contents[i];
 
-    if (!isIgnored(content, options, true)) {
-
+  parser.forEachSel('content', $template, function(content) {
+    if (!isIgnored(content, options)) {
       if (!allPlacedInContentGenericTag) {
         var select = parser.attr(content, 'select');
-
         if (select) {
-          parser.forEachSel(select, $tag, function(elt) {
-            var before = parser.serialize($tag);
+          parser.forEachSel(select, $customElt, function(elt) {
             parser.removeElement(elt); //remove to place the reamaining content inside a generic content tag
             parser.insertBefore(content, elt); //this must be after remove
           });
         } else {
-          parser.placeAllChildrenBefore(content,$tag);
+          parser.placeAllChildrenBefore(content, $customElt);
           allPlacedInContentGenericTag = true; //must break everything was placed inside content
         }
       }
     }
-    parser.removeElement(content);//remove content tag
-  }
-
-  var html = parser.serialize($template); //$template.html();
-
-  return _parse(currentSrcPath, html, options, templates);
+    parser.removeElement(content); //remove content tag
+  });
+  return $template;
 }
 
-function _parse(currentSrcPath, rawCnt, options, templates) {
-  var cnt = _parseConfiguraion(currentSrcPath, rawCnt, options, templates);
+function _parse(currentSrcPath, root, options, templates, level) {
+  _parseConfiguraion(currentSrcPath, root, options, templates);
 
-  var reg = /<(\w+(?:-\w+)+)[^>]*?>/g;
-  var match = reg.exec(cnt);
-
-  if (match) {
-    var document = parser.parse(cnt);
-
-    var allHyphenTags = match[1];
-
-    while (match = reg.exec(cnt))
-      allHyphenTags += ',' + match[1];
-
-
-    parser.forEachSel(allHyphenTags, document, function(elt) {
-
+  parser.filter(root, function(elt) {
+    if (options.validateName(elt.name) && elt.type == 'tag') {
       var tagName = elt.name;
 
-      if (!isIgnored(elt, options, true)) {
+      if (!isIgnored(elt, options)) {
         var template = _loadTemplate(tagName, options, templates);
 
-        var newElt = _parseTagWithContent(template.path, template.cnt, parser.serialize(elt), options, templates);
-
-        console.log(parser.serialize(elt.parent));
-        parser.insertBefore(elt, parser.parse(newElt));
+        var newElt = _parseTagWithContent(template.path, template.cnt, elt, options, templates);
+        if (newElt.name == 'web-fluid-grid') {
+          console.log(parser.serialize(newElt));
+          throw '';
+        }
+        parser.insertBefore(elt, newElt);
         parser.removeElement(elt);
-        console.log(parser.serialize(elt.parent));
-
+        _parse(template.path, newElt, options, templates, level + 1);
       }
-    });
+    }
+  });
 
-    cnt = parser.serialize(document);
-  }
-
-  return cnt;
+  return root;
 }
 
-
+function _preParse(src, root, opt, templates) {
+  for (var i in root) {
+    _parse(src, root[i], opt, templates, 0);
+  }
+}
 
 
 module.exports = {
@@ -255,6 +237,9 @@ module.exports = {
       opt.componentsPath = wManager.wp.vp.resolveSrc(opt.componentsPath);
 
     input.type = 'string';
-    input.value = _parse(input.wFile.src, cnt, opt, {});
+    var root = parser.parse(cnt);
+    _preParse(input.wFile.src, root, opt, {});
+
+    input.value = parser.serialize(root);
   }
 };
