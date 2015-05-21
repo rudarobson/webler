@@ -4,7 +4,8 @@ var render = module.exports = function(dom, fn) {
 
   for (var i = 0; i < dom.length; i++) {
     var elem = dom[i];
-    fn(elem);
+    if (fn(elem) == false)
+      return false;
 
     if (elem.type === 'root' ||
       ElementType.isTag(elem) ||
@@ -13,7 +14,8 @@ var render = module.exports = function(dom, fn) {
       elem.type === ElementType.CDATA
     ) {
       if (elem.children)
-        render(elem.children, fn);
+        if (render(elem.children, fn) == false)
+          return false;
     }
   }
 };

@@ -109,6 +109,10 @@ module.exports = {
     }
   },
   removeElement: function(elem) {
-    domutils.removeElement(elem);
+    if (elem._array) {
+      elem._array.splice(elem._array.lastIndexOf(elem), 1);
+    } else {
+      domutils.removeElement(elem);
+    }
   }
 }

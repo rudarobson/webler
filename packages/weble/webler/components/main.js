@@ -95,6 +95,9 @@ function _parseConfiguraion(currentSrcPath, root, options, templates) {
     if (elt.type == 'comment') {
       comments.push(elt.data);
       parser.removeElement(elt);
+
+      if (root == elt) //break top level is a comment
+        return false;
     }
   });
 
@@ -188,6 +191,9 @@ function _parse(currentSrcPath, root, options, templates, level) {
 
   parser.filter(root, function(elt) {
     if (options.validateName(elt.name) && elt.type == 'tag') {
+      if (root == elt) {
+        throw 'Top level custom tag is not supported, must be a child of another tag';
+      }
       var tagName = elt.name;
 
       if (!isIgnored(elt, options)) {
@@ -210,6 +216,7 @@ function _parse(currentSrcPath, root, options, templates, level) {
 
 function _preParse(src, root, opt, templates) {
   for (var i in root) {
+    root[i]._array = root; //top level elements
     _parse(src, root[i], opt, templates, 0);
   }
 }
@@ -240,6 +247,6 @@ module.exports = {
     var root = parser.parse(cnt);
     _preParse(input.wFile.src, root, opt, {});
 
-    input.value = parser.serialize(root);
+    input.value = parser.serialize(root).trim();
   }
 };
