@@ -60,6 +60,10 @@ function formatAttrs(attributes, opts) {
     if (output) {
       output += ' ';
     }
+    console.log(key)
+    console.log(value);
+
+
 
     if (!value && booleanAttributes[key]) {
       output += key;

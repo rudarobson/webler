@@ -53,10 +53,10 @@ module.exports = {
 
     return all;
   },*/
-  filter: function(elt, fn) {
+  filter: function(elt, fn, level) {
     if (!Array.isArray(elt))
       elt = [elt];
-    transverse(elt, fn);
+    transverse(elt, fn, level);
   },
   isComment: function(elt) {
     return elt.type == elementytype.Comment;
@@ -69,6 +69,9 @@ module.exports = {
         break;
       }
     }
+  },
+  is: function(css, elt) {
+    return cssSelect.is(elt,css);
   },
   placeAllChildrenBefore: function(ref, elt) {
     for (var i in elt.children)

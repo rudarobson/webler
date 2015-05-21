@@ -1,6 +1,6 @@
 var ElementType = require('domelementtype');
 
-var render = module.exports = function(dom, fn) {
+var render = module.exports = function(dom, fn, level) {
 
   for (var i = 0; i < dom.length; i++) {
     var elem = dom[i];
@@ -13,9 +13,10 @@ var render = module.exports = function(dom, fn) {
       elem.type === ElementType.Comment ||
       elem.type === ElementType.CDATA
     ) {
-      if (elem.children)
-        if (render(elem.children, fn) == false)
+      if (elem.children && (level == undefined || level > 0)) {
+        if (render(elem.children, fn, level != undefined ? level - 1 : undefined) == false)
           return false;
+      }
     }
   }
 };

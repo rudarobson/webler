@@ -171,10 +171,12 @@ function _parseTagWithContent(currentSrcPath, template, $customElt, options, tem
       if (!allPlacedInContentGenericTag) {
         var select = parser.attr(content, 'select');
         if (select) {
-          parser.forEachSel(select, $customElt, function(elt) {
-            parser.removeElement(elt); //remove to place the reamaining content inside a generic content tag
-            parser.insertBefore(content, elt); //this must be after remove
-          });
+          parser.filter($customElt, function(elt) {
+            if (elt != $customElt && parser.is(select, elt)) {
+              parser.removeElement(elt); //remove to place the reamaining content inside a generic content tag
+              parser.insertBefore(content, elt); //this must be after remove
+            }
+          }, 1);
         } else {
           parser.placeAllChildrenBefore(content, $customElt);
           allPlacedInContentGenericTag = true; //must break everything was placed inside content
@@ -218,6 +220,7 @@ function _preParse(src, root, opt, templates) {
   for (var i in root) {
     root[i]._array = root; //top level elements
     _parse(src, root[i], opt, templates, 0);
+    root[i]._array = undefined;;
   }
 }
 
