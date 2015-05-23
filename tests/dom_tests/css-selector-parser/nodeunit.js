@@ -164,6 +164,42 @@ module.exports.test10 = function(assert) {
   assert.done();
 }
 
+module.exports.test11 = function(assert) {
+  var query = 'div,span';
+  var obj = css.parse(query);
+
+  var match = obj[0].match;
+  var parents = obj[0].parents;
+
+  assert.equals(match.tagName, 'div');
+  assert.equals(parents.length, 0);
+
+  match = obj[1].match;
+  parents = obj[1].parents;
+
+  assert.equals(match.tagName, 'span');
+  assert.equals(parents.length, 0);
+  assert.done();
+}
+
+module.exports.test12 = function(assert) {
+  var query = 'div , span';
+  var obj = css.parse(query);
+
+  var match = obj[0].match;
+  var parents = obj[0].parents;
+
+  assert.equals(match.tagName, 'div');
+  assert.equals(parents.length, 0);
+
+  match = obj[1].match;
+  parents = obj[1].parents;
+
+  assert.equals(match.tagName, 'span');
+  assert.equals(parents.length, 0);
+  assert.done();
+}
+
 
 module.exports.test20 = function(assert) {
   var query = '.class1 > a-child';
