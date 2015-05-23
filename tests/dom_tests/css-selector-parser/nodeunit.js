@@ -127,13 +127,40 @@ module.exports.test9 = function(assert) {
   var parents = obj.parents;
 
   assert.equals(match.tagName, 'tag');
-  assert.equals(match.classes[0],'class1');
-  assert.equals(match.classes[1],'class2');
-  assert.equals(match.attributes[0].type,css.attrTypes.exactlyEqual);
-  assert.equals(match.attributes[0].name,'attribute1');
-  assert.equals(match.attributes[0].value,'value1');
-  assert.equals(match.attributes[1].type,css.attrTypes.has);
-  assert.equals(match.attributes[1].name,'attribute2');
+  assert.equals(match.classes[0], 'class1');
+  assert.equals(match.classes[1], 'class2');
+  assert.equals(match.attributes[0].type, css.attrTypes.exactlyEqual);
+  assert.equals(match.attributes[0].name, 'attribute1');
+  assert.equals(match.attributes[0].value, 'value1');
+  assert.equals(match.attributes[1].type, css.attrTypes.has);
+  assert.equals(match.attributes[1].name, 'attribute2');
+  assert.done();
+}
+
+module.exports.test10 = function(assert) {
+  var query = 'body.class1[attr] > div tag.class1[attribute1="value1"].class2[attribute2]';
+  var obj = css.parse(query)[0];
+  var match = obj.match;
+  var parents = obj.parents;
+
+  assert.equals(match.tagName, 'tag');
+  assert.equals(match.classes[0], 'class1');
+  assert.equals(match.classes[1], 'class2');
+  assert.equals(match.attributes[0].type, css.attrTypes.exactlyEqual);
+  assert.equals(match.attributes[0].name, 'attribute1');
+  assert.equals(match.attributes[0].value, 'value1');
+  assert.equals(match.attributes[1].type, css.attrTypes.has);
+  assert.equals(match.attributes[1].name, 'attribute2');
+
+
+  assert.equals(parents[0].type, css.types.anyParent);
+  assert.equals(parents[0].match.tagName, 'div');
+
+  assert.equals(parents[1].type, css.types.parent);
+  assert.equals(parents[1].match.tagName, 'body');
+  assert.equals(parents[1].match.classes[0], 'class1');
+  assert.equals(parents[1].match.attributes[0].type, css.attrTypes.has);
+  assert.equals(parents[1].match.attributes[0].name, 'attr');
   assert.done();
 }
 
@@ -146,7 +173,7 @@ module.exports.test20 = function(assert) {
 
   assert.equals(match.tagName, 'a-child');
   assert.equals(parents[0].type, css.types.parent);
-  assert.equals(parents[0].value.classes.length, 1);
-  assert.equals(parents[0].value.classes[0], 'class1');
+  assert.equals(parents[0].match.classes.length, 1);
+  assert.equals(parents[0].match.classes[0], 'class1');
   assert.done();
 }
