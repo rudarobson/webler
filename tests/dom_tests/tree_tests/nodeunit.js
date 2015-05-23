@@ -1,7 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var domBasePath = path.join(path.dirname(require.resolve('webler')), 'dom');
-var parserCreator = require(path.join(domBasePath, 'parser/parser'));
+var parserCreator = require(path.join(domBasePath, 'html/parser'));
 var mtype = require(path.join(domBasePath, 'markuptype'));
 var parser = parserCreator();
 var newLine = '\r\n';
@@ -31,7 +31,7 @@ module.exports.test2 = function(assert) {
   var domArray = createTree('test2');
   assert.equals(domArray.length, 1);
   assert.equals(domArray[0].type, mtype.text);
-  assert.equals(domArray[0].text, 'this is a text'+newLine);
+  assert.equals(domArray[0].text, 'this is a text' + newLine);
   assert.done();
 }
 
@@ -109,7 +109,17 @@ module.exports.test7 = function(assert) {
 
   assert.equals(domArray[2].tagName, 'html');
   assert.equals(domArray[2].children[1].type, mtype.cdata);
+  assert.done();
+}
 
 
+module.exports.test8 = function(assert) {
+  var domArray = createTree('test8');
+
+  assert.equals(domArray.length, 2);
+
+  assert.equals(domArray[0].tagName, 'div');
+  assert.equals(domArray[0].attributes.class, 'class');
+  
   assert.done();
 }
