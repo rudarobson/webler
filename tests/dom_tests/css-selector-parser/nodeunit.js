@@ -241,15 +241,151 @@ module.exports.test14 = function(assert) {
   assert.done();
 }
 
-module.exports.test20 = function(assert) {
-  var query = '.class1 > a-child';
+module.exports.test15 = function(assert) {
+  var query = 'div:first-child';
   var obj = css.parse(query)[0];
   var match = obj.match;
   var parents = obj.parents;
 
-  assert.equals(match.tagName, 'a-child');
-  assert.equals(parents[0].type, css.types.parent);
-  assert.equals(parents[0].match.classes.length, 1);
-  assert.equals(parents[0].match.classes[0], 'class1');
+  assert.equals(match.tagName, 'div');
+  assert.equals(match.pseudos[0].name, 'first-child');
+  assert.equals(parents.length, 0);
+  assert.done();
+}
+
+module.exports.test16 = function(assert) {
+  var query = 'div:nth-child(n)';
+  var obj = css.parse(query)[0];
+  var match = obj.match;
+  var parents = obj.parents;
+
+  assert.equals(match.tagName, 'div');
+  assert.equals(match.pseudos[0].type, css.pseudoTypes.withValue);
+  assert.equals(match.pseudos[0].value.type, css.pseudoValueTypes.numerical);
+  assert.equals(match.pseudos[0].value.left, '1');
+  assert.equals(match.pseudos[0].name, 'nth-child');
+  assert.equals(parents.length, 0);
+  assert.done();
+}
+
+module.exports.test17 = function(assert) {
+  var query = 'div:nth-child(1n)';
+  var obj = css.parse(query)[0];
+  var match = obj.match;
+  var parents = obj.parents;
+
+  assert.equals(match.tagName, 'div');
+  assert.equals(match.pseudos[0].type, css.pseudoTypes.withValue);
+  assert.equals(match.pseudos[0].value.type, css.pseudoValueTypes.numerical);
+  assert.equals(match.pseudos[0].value.left, '1');
+  assert.equals(match.pseudos[0].name, 'nth-child');
+  assert.equals(parents.length, 0);
+  assert.done();
+}
+
+module.exports.test18 = function(assert) {
+  var query = 'div:nth-child(2n)';
+  var obj = css.parse(query)[0];
+  var match = obj.match;
+  var parents = obj.parents;
+
+  assert.equals(match.tagName, 'div');
+  assert.equals(match.pseudos[0].type, css.pseudoTypes.withValue);
+  assert.equals(match.pseudos[0].value.type, css.pseudoValueTypes.numerical);
+  assert.equals(match.pseudos[0].value.left, '2');
+  assert.equals(match.pseudos[0].name, 'nth-child');
+  assert.equals(parents.length, 0);
+  assert.done();
+}
+
+module.exports.test19 = function(assert) {
+  var query = 'div:nth-child( +1n )';
+  var obj = css.parse(query)[0];
+  var match = obj.match;
+  var parents = obj.parents;
+
+  assert.equals(match.tagName, 'div');
+  assert.equals(match.pseudos[0].type, css.pseudoTypes.withValue);
+  assert.equals(match.pseudos[0].value.type, css.pseudoValueTypes.numerical);
+  assert.equals(match.pseudos[0].value.left, '1');
+  assert.equals(match.pseudos[0].name, 'nth-child');
+  assert.equals(parents.length, 0);
+  assert.done();
+}
+
+module.exports.test20 = function(assert) {
+  var query = 'div:nth-child( +1n + 32)';
+  var obj = css.parse(query)[0];
+  var match = obj.match;
+  var parents = obj.parents;
+
+  assert.equals(match.tagName, 'div');
+  assert.equals(match.pseudos[0].type, css.pseudoTypes.withValue);
+  assert.equals(match.pseudos[0].value.type, css.pseudoValueTypes.numerical);
+  assert.equals(match.pseudos[0].value.left, '1');
+  assert.equals(match.pseudos[0].value.right, '32');
+  assert.equals(match.pseudos[0].name, 'nth-child');
+  assert.equals(parents.length, 0);
+  assert.done();
+}
+
+module.exports.test20 = function(assert) {
+  var query = 'div:nth-child( +1n -32)';
+  var obj = css.parse(query)[0];
+  var match = obj.match;
+  var parents = obj.parents;
+
+  assert.equals(match.tagName, 'div');
+  assert.equals(match.pseudos[0].type, css.pseudoTypes.withValue);
+  assert.equals(match.pseudos[0].value.type, css.pseudoValueTypes.numerical);
+  assert.equals(match.pseudos[0].value.left, '1');
+  assert.equals(match.pseudos[0].value.right, '-32');
+  assert.equals(match.pseudos[0].name, 'nth-child');
+  assert.equals(parents.length, 0);
+  assert.done();
+}
+
+module.exports.test21 = function(assert) {
+  var query = 'div:nth-child( -3n +4)';
+  var obj = css.parse(query)[0];
+  var match = obj.match;
+  var parents = obj.parents;
+
+  assert.equals(match.tagName, 'div');
+  assert.equals(match.pseudos[0].type, css.pseudoTypes.withValue);
+  assert.equals(match.pseudos[0].value.type, css.pseudoValueTypes.numerical);
+  assert.equals(match.pseudos[0].value.left, '-3');
+  assert.equals(match.pseudos[0].value.right, '4');
+  assert.equals(match.pseudos[0].name, 'nth-child');
+  assert.equals(parents.length, 0);
+  assert.done();
+}
+
+
+module.exports.test22 = function(assert) {
+  var query = 'div:nth-child( odd )';
+  var obj = css.parse(query)[0];
+  var match = obj.match;
+  var parents = obj.parents;
+
+  assert.equals(match.tagName, 'div');
+  assert.equals(match.pseudos[0].type, css.pseudoTypes.withValue);
+  assert.equals(match.pseudos[0].value.type, css.pseudoValueTypes.odd);
+  assert.equals(match.pseudos[0].name, 'nth-child');
+  assert.equals(parents.length, 0);
+  assert.done();
+}
+
+module.exports.test23 = function(assert) {
+  var query = 'div:nth-child( even )';
+  var obj = css.parse(query)[0];
+  var match = obj.match;
+  var parents = obj.parents;
+
+  assert.equals(match.tagName, 'div');
+  assert.equals(match.pseudos[0].type, css.pseudoTypes.withValue);
+  assert.equals(match.pseudos[0].value.type, css.pseudoValueTypes.even);
+  assert.equals(match.pseudos[0].name, 'nth-child');
+  assert.equals(parents.length, 0);
   assert.done();
 }
