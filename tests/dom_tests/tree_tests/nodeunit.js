@@ -1,9 +1,10 @@
 var fs = require('fs');
 var path = require('path');
-var parserBasePath = path.join(path.dirname(require.resolve('webler')), 'parser');
-var parserCreator = require(path.join(parserBasePath, 'parser/parser'));
-var mtype = require(path.join(parserBasePath, 'dom/markuptype'));
+var domBasePath = path.join(path.dirname(require.resolve('webler')), 'dom');
+var parserCreator = require(path.join(domBasePath, 'parser/parser'));
+var mtype = require(path.join(domBasePath, 'markuptype'));
 var parser = parserCreator();
+var newLine = '\r\n';
 
 function createTree(testName) {
   return parser.parse(fs.readFileSync(path.join('srcs', testName + '.html')).toString());
@@ -22,7 +23,7 @@ module.exports.test1 = function(assert) {
   assert.equals(domArray[0].tagName, 'div');
   assert.equals(domArray[0].children.length, 0);
   assert.equals(domArray[1].type, mtype.text);
-  assert.equals(domArray[1].text, '\n');
+  assert.equals(domArray[1].text, newLine);
   assert.done();
 }
 
@@ -30,7 +31,7 @@ module.exports.test2 = function(assert) {
   var domArray = createTree('test2');
   assert.equals(domArray.length, 1);
   assert.equals(domArray[0].type, mtype.text);
-  assert.equals(domArray[0].text, 'this is a text\n');
+  assert.equals(domArray[0].text, 'this is a text'+newLine);
   assert.done();
 }
 
@@ -45,7 +46,7 @@ module.exports.test3 = function(assert) {
   assert.equals(domArray[0].children[0].text, 'Starts with element');
 
   assert.equals(domArray[1].type, 'text');
-  assert.equals(domArray[1].text, '\nEnds with text\n');
+  assert.equals(domArray[1].text, newLine + 'Ends with text' + newLine);
 
   assert.done();
 }
@@ -77,7 +78,7 @@ module.exports.test5 = function(assert) {
 
   assert.equals(domArray[2].tagName, 'html');
   assert.equals(domArray[2].children[1].type, mtype.comment);
-  assert.equals(domArray[2].children[1].content, '<!-- this is a comment <div>\n</div>-->');
+  assert.equals(domArray[2].children[1].content, '<!-- this is a comment <div>' + newLine + '</div>-->');
   assert.equals(domArray[2].children[3].type, mtype.cdata);
   assert.equals(domArray[2].children[3].content, '<![CDATA[ <!-- a comment --> ]]>');
   assert.equals(domArray[2].children[5].tagName, 'head');
