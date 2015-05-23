@@ -121,6 +121,16 @@ module.exports.test8 = function(assert) {
 }
 
 module.exports.test9 = function(assert) {
+  var query = '#id';
+  var obj = css.parse(query)[0];
+  var match = obj.match;
+  var parents = obj.parents;
+  assert.equals(match.id, 'id');
+  assert.equals(parents.length, 0);
+  assert.done();
+}
+
+module.exports.test10 = function(assert) {
   var query = 'tag.class1[attribute1="value1"].class2[attribute2]';
   var obj = css.parse(query)[0];
   var match = obj.match;
@@ -137,7 +147,7 @@ module.exports.test9 = function(assert) {
   assert.done();
 }
 
-module.exports.test10 = function(assert) {
+module.exports.test11 = function(assert) {
   var query = 'body.class1[attr] > div tag.class1[attribute1="value1"].class2[attribute2]';
   var obj = css.parse(query)[0];
   var match = obj.match;
@@ -164,7 +174,7 @@ module.exports.test10 = function(assert) {
   assert.done();
 }
 
-module.exports.test11 = function(assert) {
+module.exports.test12 = function(assert) {
   var query = 'div,span';
   var obj = css.parse(query);
 
@@ -182,7 +192,7 @@ module.exports.test11 = function(assert) {
   assert.done();
 }
 
-module.exports.test12 = function(assert) {
+module.exports.test13 = function(assert) {
   var query = 'div , span';
   var obj = css.parse(query);
 
@@ -200,8 +210,8 @@ module.exports.test12 = function(assert) {
   assert.done();
 }
 
-module.exports.test13 = function(assert) {
-  var query = 'tag.class1[attribute1="value1"].class2[attribute2]        ,tag.class1[attribute1="value1"].class2[attribute2]';
+module.exports.test14 = function(assert) {
+  var query = 'tag.class1[attribute1="value1"].class2[attribute2]        ,tag.class1[attribute1="value1"].class2[attribute2]#id';
   var obj = css.parse(query);
   var match = obj[0].match;
   var parents = obj[0].parents;
@@ -226,6 +236,7 @@ module.exports.test13 = function(assert) {
   assert.equals(match.attributes[0].value, 'value1');
   assert.equals(match.attributes[1].type, css.attrTypes.has);
   assert.equals(match.attributes[1].name, 'attribute2');
+  assert.equals(match.id, 'id');
 
   assert.done();
 }
