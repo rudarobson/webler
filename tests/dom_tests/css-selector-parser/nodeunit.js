@@ -200,6 +200,35 @@ module.exports.test12 = function(assert) {
   assert.done();
 }
 
+module.exports.test13 = function(assert) {
+  var query = 'tag.class1[attribute1="value1"].class2[attribute2]        ,tag.class1[attribute1="value1"].class2[attribute2]';
+  var obj = css.parse(query);
+  var match = obj[0].match;
+  var parents = obj[0].parents;
+
+  assert.equals(match.tagName, 'tag');
+  assert.equals(match.classes[0], 'class1');
+  assert.equals(match.classes[1], 'class2');
+  assert.equals(match.attributes[0].type, css.attrTypes.exactlyEqual);
+  assert.equals(match.attributes[0].name, 'attribute1');
+  assert.equals(match.attributes[0].value, 'value1');
+  assert.equals(match.attributes[1].type, css.attrTypes.has);
+  assert.equals(match.attributes[1].name, 'attribute2');
+
+  match = obj[1].match;
+  parents = obj[1].parents;
+
+  assert.equals(match.tagName, 'tag');
+  assert.equals(match.classes[0], 'class1');
+  assert.equals(match.classes[1], 'class2');
+  assert.equals(match.attributes[0].type, css.attrTypes.exactlyEqual);
+  assert.equals(match.attributes[0].name, 'attribute1');
+  assert.equals(match.attributes[0].value, 'value1');
+  assert.equals(match.attributes[1].type, css.attrTypes.has);
+  assert.equals(match.attributes[1].name, 'attribute2');
+
+  assert.done();
+}
 
 module.exports.test20 = function(assert) {
   var query = '.class1 > a-child';
