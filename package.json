@@ -21,15 +21,13 @@
   },
   "preferGlobal": true,
   "dependencies": {
-    "cheerio": "^0.19.0",
-    "clean-css": "^3.2.3",
     "colors": "^1.1.0",
     "html-minifier": "^0.7.2",
-    "marked": "^0.3.3",
     "mkdirp": "^0.5.0",
-    "node-sass": "^3.0.0-beta.7",
     "node-watch": "^0.3.4",
-    "uglify-js": "^2.4.20",
     "yargs": "^3.7.2"
+  },
+  "devDependencies": {
+    "nodeunit": "^0.9.1"
   }
 }
