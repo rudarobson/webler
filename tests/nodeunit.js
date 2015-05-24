@@ -4,10 +4,12 @@ var domBasePath = path.join(path.dirname(require.resolve('webler')), 'dom');
 var cssEngine = require(path.join(domBasePath, 'css/engine'));
 var htmlParser = require(path.join(domBasePath, 'html/parser'))();
 var mtype = require(path.join(domBasePath, 'markuptype'));
+var $ = require(path.join(domBasePath, 'domarray'));
 
 var newLine = '\r\n';
 var css = require(path.join(domBasePath, 'css/parser'));
-var dom1 = htmlParser.parse(fs.readFileSync('./dom_tests/css-engine/src1.html').toString());
+
+var document1 = htmlParser.parse(fs.readFileSync('./dom_tests/css-engine/src1.html').toString());
 
 
 
@@ -15,68 +17,71 @@ function createTree(testName) {
   return htmlParser.parse(fs.readFileSync(path.join('dom_tests/html-parser', testName + '.html')).toString());
 }
 
+function createTreeSerialization(testName) {
+  return htmlParser.parse(fs.readFileSync(path.join('dom_tests/html-parser-serialization', testName + '.html')).toString());
+}
+
 module.exports['css-engine'] = {
-  test1 : function(assert) {
-    var elts = dom1.filter('.class2 span');
+  test1: function(assert) {
+    var elts = $(document1).filter('.class2 span');
+    assert.equals(elts.length, 1);
+    assert.equals(elts[0].tagName, 'span');
+    assert.done();
+  },
+  test2: function(assert) {
+    var elts = $(document1).filter('#spanwithid'); //changing sensitive case  of document
+    assert.equals(elts.length, 1);
+    assert.done();
+  },
+  test3: function(assert) {
+    var elts = $(document1).filter('[attribute1]');
+
+    assert.equals(elts.length, 2);
+    assert.equals(elts[0].tagName, 'div');
+    assert.equals(elts[1].tagName, 'span');
+    assert.done();
+  },
+
+  test4: function(assert) {
+    var elts = $(document1).filter('[attribute1="value"]');
+
+    assert.equals(elts.length, 1);
+    assert.equals(elts[0].tagName, 'div');
+    assert.done();
+  },
+  test5: function(assert) {
+    var elts = $(document1).filter('[class~="div-class1"]');
+
+    assert.equals(elts.length, 1);
+    assert.equals(elts[0].tagName, 'div');
+    assert.done();
+  },
+
+  test6: function(assert) {
+    var elts = $(document1).filter('[attribute1^="value"]');
+
+    assert.equals(elts.length, 2);
+    assert.equals(elts[0].tagName, 'div');
+    assert.equals(elts[1].tagName, 'span');
+    assert.done();
+  },
+  test7: function(assert) {
+    var elts = $(document1).filter('[attribute1$="alue1"]');
 
     assert.equals(elts.length, 1);
     assert.equals(elts[0].tagName, 'span');
     assert.done();
   },
-  test2 :function(assert) {
-    var elts = dom1.filter('#spanwithid'); //changing sensitive case  of document
-    assert.equals(elts.length, 1);
-    assert.done();
-  },
-  test3 :function(assert) {
-    var elts = dom1.filter('[attribute1]');
+  test8: function(assert) {
+    var elts = $(document1).filter('[attribute1*="alue"]');
 
     assert.equals(elts.length, 2);
     assert.equals(elts[0].tagName, 'div');
     assert.equals(elts[1].tagName, 'span');
     assert.done();
   },
-
-  test4 :function(assert) {
-    var elts = dom1.filter('[attribute1="value"]');
-
-    assert.equals(elts.length, 1);
-    assert.equals(elts[0].tagName, 'div');
-    assert.done();
-  },
-  test5 :function(assert) {
-    var elts = dom1.filter('[class~="div-class1"]');
-
-    assert.equals(elts.length, 1);
-    assert.equals(elts[0].tagName, 'div');
-    assert.done();
-  },
-
-  test6 :function(assert) {
-    var elts = dom1.filter('[attribute1^="value"]');
-
-    assert.equals(elts.length, 2);
-    assert.equals(elts[0].tagName, 'div');
-    assert.equals(elts[1].tagName, 'span');
-    assert.done();
-  },
-  test7 :function(assert) {
-    var elts = dom1.filter('[attribute1$="alue1"]');
-
-    assert.equals(elts.length, 1);
-    assert.equals(elts[0].tagName, 'span');
-    assert.done();
-  },
-  test8 :function(assert) {
-    var elts = dom1.filter('[attribute1*="alue"]');
-
-    assert.equals(elts.length, 2);
-    assert.equals(elts[0].tagName, 'div');
-    assert.equals(elts[1].tagName, 'span');
-    assert.done();
-  },
-  test9 :function(assert) {
-    var elts = dom1.filter('[attribute2|="value1"]');
+  test9: function(assert) {
+    var elts = $(document1).filter('[attribute2|="value1"]');
 
     assert.equals(elts.length, 1);
     assert.equals(elts[0].tagName, 'span');
@@ -452,116 +457,137 @@ module.exports['css-selector-parser'] = {
 
 module.exports['html-parser'] = {
   test0: function(assert) {
-    var domArray = createTree('test0');
-    assert.equals(domArray.length, 0);
+    var document = createTree('test0');
+    assert.equals(document.children.length, 0);
     assert.done();
   },
 
   test1: function(assert) {
-    var domArray = createTree('test1');
-    assert.equals(domArray.length, 2);
-    assert.equals(domArray[0].type, mtype.element);
-    assert.equals(domArray[0].tagName, 'div');
-    assert.equals(domArray[0].children.length, 0);
-    assert.equals(domArray[1].type, mtype.text);
-    assert.equals(domArray[1].text, newLine);
+    var document = createTree('test1');
+    assert.equals(document.children.length, 2);
+    assert.equals(document.children[0].type, mtype.element);
+    assert.equals(document.children[0].tagName, 'div');
+    assert.equals(document.children[0].children.length, 0);
+    assert.equals(document.children[1].type, mtype.text);
+    assert.equals(document.children[1].text, newLine);
     assert.done();
   },
 
   test2: function(assert) {
-    var domArray = createTree('test2');
-    assert.equals(domArray.length, 1);
-    assert.equals(domArray[0].type, mtype.text);
-    assert.equals(domArray[0].text, 'this is a text' + newLine);
+    var document = createTree('test2');
+    assert.equals(document.children.length, 1);
+    assert.equals(document.children[0].type, mtype.text);
+    assert.equals(document.children[0].text, 'this is a text' + newLine);
     assert.done();
   },
 
   test3: function(assert) {
-    var domArray = createTree('test3');
-    assert.equals(domArray.length, 2);
+    var document = createTree('test3');
+    assert.equals(document.children.length, 2);
 
-    assert.equals(domArray[0].type, mtype.element);
-    assert.equals(domArray[0].tagName, 'div');
-    assert.equals(domArray[0].children.length, 1);
-    assert.equals(domArray[0].children[0].type, mtype.text);
-    assert.equals(domArray[0].children[0].text, 'Starts with element');
+    assert.equals(document.children[0].type, mtype.element);
+    assert.equals(document.children[0].tagName, 'div');
+    assert.equals(document.children[0].children.length, 1);
+    assert.equals(document.children[0].children[0].type, mtype.text);
+    assert.equals(document.children[0].children[0].text, 'Starts with element');
 
-    assert.equals(domArray[1].type, 'text');
-    assert.equals(domArray[1].text, newLine + 'Ends with text' + newLine);
+    assert.equals(document.children[1].type, 'text');
+    assert.equals(document.children[1].text, newLine + 'Ends with text' + newLine);
 
     assert.done();
   },
 
   test4: function(assert) {
-    var domArray = createTree('test4');
+    var document = createTree('test4');
 
-    assert.equals(domArray.length, 4);
+    assert.equals(document.children.length, 4);
 
-    assert.equals(domArray[0].tagName, 'div');
-    assert.equals(domArray[0].children[0].tagName, 'div');
-    assert.equals(domArray[0].children[0].children[0].tagName, 'span');
-    assert.equals(domArray[0].children[0].children[0].children[0].tagName, 'div');
-    assert.equals(domArray[0].children[0].children[0].children[0].children[0].text, 'Correct Syntax');
+    assert.equals(document.children[0].tagName, 'div');
+    assert.equals(document.children[0].children[0].tagName, 'div');
+    assert.equals(document.children[0].children[0].children[0].tagName, 'span');
+    assert.equals(document.children[0].children[0].children[0].children[0].tagName, 'div');
+    assert.equals(document.children[0].children[0].children[0].children[0].children[0].text, 'Correct Syntax');
 
-    assert.equals(domArray[2].tagName, 'span');
-    assert.equals(domArray[2].children.length, 1);
-    assert.equals(domArray[2].children[0].tagName, 'div');
-    assert.equals(domArray[2].children[0].children[0].text, 'Wrong Syntax');
+    assert.equals(document.children[2].tagName, 'span');
+    assert.equals(document.children[2].children.length, 1);
+    assert.equals(document.children[2].children[0].tagName, 'div');
+    assert.equals(document.children[2].children[0].children[0].text, 'Wrong Syntax');
 
     assert.done();
   },
 
   test5: function(assert) {
-    var domArray = createTree('test5');
+    var document = createTree('test5');
 
-    assert.equals(domArray.length, 4);
-    assert.equals(domArray[0].type, mtype.doctype);
+    assert.equals(document.children.length, 4);
+    assert.equals(document.children[0].type, mtype.doctype);
 
-    assert.equals(domArray[2].tagName, 'html');
-    assert.equals(domArray[2].children[1].type, mtype.comment);
-    assert.equals(domArray[2].children[1].content, '<!-- this is a comment <div>' + newLine + '</div>-->');
-    assert.equals(domArray[2].children[3].type, mtype.cdata);
-    assert.equals(domArray[2].children[3].content, '<![CDATA[ <!-- a comment --> ]]>');
-    assert.equals(domArray[2].children[5].tagName, 'head');
-    assert.equals(domArray[2].children[7].tagName, 'body');
-    assert.equals(domArray[2].children[8].type, mtype.text);
+    assert.equals(document.children[2].tagName, 'html');
+    assert.equals(document.children[2].children[1].type, mtype.comment);
+    assert.equals(document.children[2].children[1].content, '<!-- this is a comment <div>' + newLine + '</div>-->');
+    assert.equals(document.children[2].children[3].type, mtype.cdata);
+    assert.equals(document.children[2].children[3].content, '<![CDATA[ <!-- a comment --> ]]>');
+    assert.equals(document.children[2].children[5].tagName, 'head');
+    assert.equals(document.children[2].children[7].tagName, 'body');
+    assert.equals(document.children[2].children[8].type, mtype.text);
 
     assert.done();
   },
 
   test6: function(assert) {
-    var domArray = createTree('test6');
+    var document = createTree('test6');
 
-    assert.equals(domArray.length, 3);
-    assert.equals(domArray[0].type, mtype.doctype);
+    assert.equals(document.children.length, 3);
+    assert.equals(document.children[0].type, mtype.doctype);
 
-    assert.equals(domArray[2].tagName, 'html');
-    assert.equals(domArray[2].children[1].type, mtype.comment);
+    assert.equals(document.children[2].tagName, 'html');
+    assert.equals(document.children[2].children[1].type, mtype.comment);
 
 
     assert.done();
   },
 
   test7: function(assert) {
-    var domArray = createTree('test7');
+    var document = createTree('test7');
 
-    assert.equals(domArray.length, 3);
-    assert.equals(domArray[0].type, mtype.doctype);
+    assert.equals(document.children.length, 3);
+    assert.equals(document.children[0].type, mtype.doctype);
 
-    assert.equals(domArray[2].tagName, 'html');
-    assert.equals(domArray[2].children[1].type, mtype.cdata);
+    assert.equals(document.children[2].tagName, 'html');
+    assert.equals(document.children[2].children[1].type, mtype.cdata);
     assert.done();
   },
 
-
   test8: function(assert) {
-    var domArray = createTree('test8');
+    var document = createTree('test8');
 
-    assert.equals(domArray.length, 2);
+    assert.equals(document.children.length, 2);
 
-    assert.equals(domArray[0].tagName, 'div');
-    assert.equals(domArray[0].attributes.class, 'class');
+    assert.equals(document.children[0].tagName, 'div');
+    assert.equals(document.children[0].attributes.class, 'class');
 
+    assert.done();
+  }
+}
+
+module.exports['html-parser-serialization'] = {
+  test0: function(assert) {
+    var testName = 'test0';
+    var document = createTreeSerialization(testName);
+
+    var actual = document.serialize();
+    var expected = fs.readFileSync(path.join('dom_tests/html-parser-serialization/expected', testName + '.html'));
+    assert.equals(expected, actual);
+    assert.done();
+  },
+
+  test1: function(assert) {
+    var testName = 'test1';
+    var document = createTreeSerialization(testName);
+    var actual = document.serialize();
+    fs.writeFileSync(path.join('dom_tests/html-parser-serialization/expected', testName + '.html'), actual);
+    var expected = fs.readFileSync(path.join('dom_tests/html-parser-serialization/expected', testName + '.html'));
+    assert.equals(expected, actual);
     assert.done();
   },
 }
