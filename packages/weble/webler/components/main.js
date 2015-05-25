@@ -4,16 +4,11 @@ var loader = require('./parser');
 var glob = require('glob-expand');
 var parser = require('./parser');
 
-function isIgnored($tag, options, remove) {
-  var attribs = $tag.attribs;
+function isIgnored($tag, options) {
   var attr = options.ignoreAttribute;
 
-  if (!attr)
-    return false;
-
-  if (parser.hasAttr($tag, attr)) {
-    if (remove)
-      parser.deleteAttr($tag, attr);
+  if (attr && $tag.hasAttribute(attr)) {
+    $tag.removeAttribute(attr);
     return true;
   }
 
@@ -64,42 +59,49 @@ function endsWith(str, suffix) {
   return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }
 
-function _attrEngine(mergeInto, additionalAttrs, action, attrs) {
+function _attrEngine($template, $tag, action, attrs) {
   if (!attrs)
     attrs = {};
 
-  for (var i in additionalAttrs) {
+  for (var i in $tag[0].attributes) {
     if (mergeInto[i]) {
 
       action = attrs[i] || action;
 
       if (action == 'merge') //specific attribute to merge instead of replace
-        mergeInto[i] = mergeInto[i] + ' ' + additionalAttrs[i];
+        $template.attr(i, $template.attr(i) + ($tag.attr(i) ? ' ' + $tag.attr(i) : ''));
+      //mergeInto[i] = mergeInto[i] + ' ' + additionalAttrs[i];
       else if (action == 'replace')
-        mergeInto[i] = mergeInto[i] + ' ' + additionalAttrs[i];
+        $template.attr(i, $tag.attr(i));
+      //mergeInto[i] = mergeInto[i] + ' ' + additionalAttrs[i];
       else
         throw 'Attribute action not recognized';
 
     } else { //just add the attribute
-      mergeInto[i] = additionalAttrs[i];
+      $template.attr(i, $tag.attr(i));
+      //mergeInto[i] = additionalAttrs[i];
     }
   }
 }
 
 
-function _parseConfiguraion(currentSrcPath, root, options, templates) {
+function _parseConfiguraion(currentSrcPath, markupType, root, options, templates) {
   var configRegex = /<!--\s*components:([\w\W]*?)-->\t*(?:\r?\n)?/i;
   var comments = [];
 
-  parser.filter(root, function(elt) {
-    if (elt.type == 'comment') {
-      comments.push(elt.data);
-      parser.removeElement(elt);
-
-      if (root == elt) //break top level is a comment
-        return false;
+  var comments = [];
+  root.visit(function() {
+    if (this.type == markupType.comment) {
+      var serialize = this.serialize();
+      if (/<!--\s*components:\s*/.test(serialize))
+        comments.push(this);
     }
   });
+
+  for (var i in comments) {
+    comments[i].remove();
+    comments[i] = comments[i].serialize();
+  }
 
   for (var i in comments) {
     var cnt = comments[i];
@@ -152,67 +154,51 @@ function _parseConfiguraion(currentSrcPath, root, options, templates) {
   }
 }
 
-function _parseTagWithContent(currentSrcPath, template, $customElt, options, templates, root) {
-  var $template = parser.parse(template)[0];
-  if (!$template.attribs)
-    $template.attribs = {};
-  if (!$customElt.attribs)
-    $customElt.attribs = {};
+function _parseTagWithContent($, currentSrcPath, template, customElt, options, templates, root) {
+  var $template = $.parse(template).children[0];
+  var $customElt = $(customElt);
+  _attrEngine($template, $customElt, options.attrAction, options.attrs);
 
-  var tagAttrs = $customElt.attribs;
-  var templateAttrs = $template.attribs;
+  var $content = $($template).filter('content');
 
-  _attrEngine(templateAttrs, tagAttrs, options.attrAction, options.attrs);
+  $content.each(function() {
+    if (!isIgnored(this, options)) {
+      var select = this.attr('select');
 
-  var allPlacedInContentGenericTag = false;
-
-  parser.forEachSel('content', $template, function(content) {
-    if (!isIgnored(content, options)) {
-      if (!allPlacedInContentGenericTag) {
-        var select = parser.attr(content, 'select');
-        if (select) {
-          parser.filter($customElt, function(elt) {
-            if (elt != $customElt && parser.is(select, elt)) {
-              parser.removeElement(elt); //remove to place the reamaining content inside a generic content tag
-              parser.insertBefore(content, elt); //this must be after remove
-            }
-          }, 1);
-        } else {
-          parser.placeAllChildrenBefore(content, $customElt);
-          allPlacedInContentGenericTag = true; //must break everything was placed inside content
-        }
+      if (select) {
+        $customElt.children(select).insertBefore($(this));
+      } else {
+        $customElt.children().insertBefore($(this));
+        return false; //all elements placed stop
       }
     }
-    parser.removeElement(content); //remove content tag
-  });
+  }).remove();
+
   return $template;
 }
 
-function _parse(currentSrcPath, root, options, templates, level) {
-  _parseConfiguraion(currentSrcPath, root, options, templates);
+function _parse($, currentSrcPath, markupType, root, options, templates, level) {
 
-  parser.filter(root, function(elt) {
-    if (options.validateName(elt.name) && elt.type == 'tag') {
-      if (root == elt) {
+  _parseConfiguraion(currentSrcPath, markupType, root, options, templates);
+  var toRemove = [];
+  root.visit(function() {
+
+    if (this.type == markupType.element && options.validateName(this.tagName) && !isIgnored(this, options)) {
+      if (root == this) {
         throw 'Top level custom tag is not supported, must be a child of another tag';
       }
-      var tagName = elt.name;
 
-      if (!isIgnored(elt, options)) {
-        var template = _loadTemplate(tagName, options, templates);
+      var tagName = this.tagName;
+      var template = _loadTemplate(tagName, options, templates);
 
-        var newElt = _parseTagWithContent(template.path, template.cnt, elt, options, templates);
-        if (newElt.name == 'web-fluid-grid') {
-          console.log(parser.serialize(newElt));
-          throw '';
-        }
-        parser.insertBefore(elt, newElt);
-        parser.removeElement(elt);
-        _parse(template.path, newElt, options, templates, level + 1);
-      }
+      var newElt = _parseTagWithContent($, template.path, template.cnt, this, options, templates);
+      this.insertBefore(newElt);
+      toRemove.push(this);
+      _parse($, template.path, markupType, newElt, options, templates, level + 1);
     }
   });
-
+  for (var i in toRemove)
+    toRemove[i].remove();
   return root;
 }
 
@@ -239,17 +225,23 @@ module.exports = {
     }
   },
   start: function(input, wManager) {
+
     var options = wManager.options;
-    var cnt = wManager.convert(input, 'string');
+    //var cnt = wManager.convert(input, 'string');
+
     var opt = wManager.options;
 
     if (opt.componentsPath)
       opt.componentsPath = wManager.wp.vp.resolveSrc(opt.componentsPath);
 
-    input.type = 'string';
-    var root = parser.parse(cnt);
-    _preParse(input.wFile.src, root, opt, {});
+    //input.type = 'string';
+    var $ = wManager.dom.$;
+    var markupType = wManager.dom.markupType;
+    var document = wManager.convert(input, 'dom');
 
-    input.value = parser.serialize(root).trim();
+    _parse($, input.wFile.src, markupType, document, opt, {});
+
+    input.value = document.serialize();
+    input.type = 'string';
   }
 };

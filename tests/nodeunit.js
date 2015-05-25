@@ -5,6 +5,7 @@ var cssEngine = require(path.join(domBasePath, 'css/engine'));
 var htmlParser = require(path.join(domBasePath, 'html/parser'))();
 var mtype = require(path.join(domBasePath, 'markuptype'));
 var $ = require(path.join(domBasePath, 'domarray'));
+var webler = require('webler');
 
 var newLine = '\r\n';
 var css = require(path.join(domBasePath, 'css/parser'));
@@ -17,11 +18,17 @@ function createTree(testName) {
   return htmlParser.parse(fs.readFileSync(path.join('dom_tests/html-parser', testName + '.html')).toString());
 }
 
+function createTreeWithDomName(domName) {
+  return htmlParser.parse(fs.readFileSync(path.join('dom_tests/dom-files', domName + '.html')).toString());
+}
+
 function createTreeSerialization(testName) {
   return htmlParser.parse(fs.readFileSync(path.join('dom_tests/html-parser-serialization', testName + '.html')).toString());
 }
 
-module.exports['css-engine'] = {
+module.exports.dom = {};
+
+module.exports.dom['css-engine'] = {
   test1: function(assert) {
     var elts = $(document1).filter('.class2 span');
     assert.equals(elts.length, 1);
@@ -89,7 +96,7 @@ module.exports['css-engine'] = {
   },
 }
 
-module.exports['css-selector-parser'] = {
+module.exports.dom['css-selector-parser'] = {
   test0: function(assert) {
     var query = 'div';
     var obj = css.parse(query)[0];
@@ -455,7 +462,7 @@ module.exports['css-selector-parser'] = {
   }
 }
 
-module.exports['html-parser'] = {
+module.exports.dom['html-parser'] = {
   test0: function(assert) {
     var document = createTree('test0');
     assert.equals(document.children.length, 0);
@@ -567,6 +574,34 @@ module.exports['html-parser'] = {
     assert.equals(document.children[0].attributes.class, 'class');
 
     assert.done();
+  },
+
+  test9: function(assert) {
+    var document = createTree('test9');
+
+    assert.equals(document.children.length, 4);
+    assert.equals(document.children[0].type, mtype.comment);
+    assert.equals(document.children[2].tagName, 'div');
+
+    assert.done();
+  }
+}
+
+module.exports.dom['dom-array'] = {
+  test0: function(assert) {
+    var dom = $(createTreeWithDomName("dom0"));
+    var elts = dom.filter('[attribute]');
+
+    assert.equals(elts.length, 2);
+    assert.equals(elts[0].tagName, 'div');
+
+    assert.equals(elts[0].tagName, 'div');
+    assert.ok(elts[0].hasAttribute('attribute'));
+
+
+    assert.equals(elts[1].tagName, 'div');
+    assert.equals($(elts[1]).attr('attribute'), 'attr');
+    assert.done();
   }
 }
 
@@ -590,4 +625,37 @@ module.exports['html-parser-serialization'] = {
     assert.equals(expected, actual);
     assert.done();
   },
+}
+
+
+module.exports.packages = {
+  components: {}
+}
+
+webler.loadModule('htmlmin');
+webler.loadModule('components');
+
+for (var i = 2; i < 3; i++) {
+  var testName = 'test' + i;
+  var srcBase = 'package_tests/components/tests';
+  var destBase = 'package_tests/components/tests_results';
+  var expectedBase = 'package_tests/components/expected';
+
+  (function(testName) {
+
+    module.exports.packages.components[testName] = function(assert) {
+
+      webler.weble({
+        src: path.join(srcBase, testName),
+        dest: path.join(destBase,testName)
+      }).components({
+        componentsPath: '~/components'
+      }).htmlmin();
+
+      webler.render();
+
+      assert.equals(fs.readFileSync(path.join(expectedBase, testName, 'index.html')).toString(), fs.readFileSync(path.join(destBase, testName, 'index.html')).toString());
+      assert.done();
+    }
+  })(testName);
 }
