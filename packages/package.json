@@ -3,7 +3,8 @@
     "razor": ["webler"],
     "components": ["webler"],
     "bundle": ["webler"],
-    "markdown": ["webler"]
+    "markdown": ["webler"],
+    "htmlmin": ["webler"]
   },
   "init": {
     "webler": ["webler"],

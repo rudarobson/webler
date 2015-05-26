@@ -94,6 +94,12 @@ module.exports.dom['css-engine'] = {
     assert.equals(elts[0].tagName, 'span');
     assert.done();
   },
+  test10: function(assert) {
+    var elts = $(document1).filter('*');
+
+    assert.equals(elts.length, 8);
+    assert.done();
+  }
 }
 
 module.exports.dom['css-selector-parser'] = {
@@ -602,7 +608,15 @@ module.exports.dom['dom-array'] = {
     assert.equals(elts[1].tagName, 'div');
     assert.equals($(elts[1]).attr('attribute'), 'attr');
     assert.done();
-  }
+  },
+  test1: function(assert) {
+    var dom = $(createTreeWithDomName("dom0"));
+    dom.filter('div').remove();
+    var elts = dom.filter('div');
+
+    assert.equals(elts.length, 0);
+    assert.done();
+  },
 }
 
 module.exports['html-parser-serialization'] = {
@@ -635,7 +649,7 @@ module.exports.packages = {
 webler.loadModule('htmlmin');
 webler.loadModule('components');
 
-for (var i = 2; i < 3; i++) {
+for (var i = 0; i <= 9; i++) {
   var testName = 'test' + i;
   var srcBase = 'package_tests/components/tests';
   var destBase = 'package_tests/components/tests_results';
@@ -647,7 +661,7 @@ for (var i = 2; i < 3; i++) {
 
       webler.weble({
         src: path.join(srcBase, testName),
-        dest: path.join(destBase,testName)
+        dest: path.join(destBase, testName)
       }).components({
         componentsPath: '~/components'
       }).htmlmin();

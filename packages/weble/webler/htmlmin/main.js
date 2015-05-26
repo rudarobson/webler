@@ -13,7 +13,7 @@ module.exports = {
     var opt = wManager.options;
     var isDebug = wManager.isDebug;
 
-    if (isDebug) {
+    if (!isDebug) {
       var html = wManager.convert(input, 'string');
       input.value = htmlmin(html, opt);
       input.type = 'string';

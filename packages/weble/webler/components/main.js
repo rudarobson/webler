@@ -64,111 +64,103 @@ function _attrEngine($template, $tag, action, attrs) {
     attrs = {};
 
   for (var i in $tag[0].attributes) {
-    if (mergeInto[i]) {
 
-      action = attrs[i] || action;
+    action = attrs[i] || action;
 
-      if (action == 'merge') //specific attribute to merge instead of replace
-        $template.attr(i, $template.attr(i) + ($tag.attr(i) ? ' ' + $tag.attr(i) : ''));
-      //mergeInto[i] = mergeInto[i] + ' ' + additionalAttrs[i];
-      else if (action == 'replace')
-        $template.attr(i, $tag.attr(i));
-      //mergeInto[i] = mergeInto[i] + ' ' + additionalAttrs[i];
-      else
-        throw 'Attribute action not recognized';
+    var newValue = $tag.first().attr(i);
+    var templateValue = $template.first().attr(i);
 
-    } else { //just add the attribute
-      $template.attr(i, $tag.attr(i));
-      //mergeInto[i] = additionalAttrs[i];
+    if (action == 'merge') { //specific attribute to merge instead of replace
+      if (templateValue) {
+        if (newValue)
+          newValue = templateValue + ' ' + newValue;
+        else
+          newValue = templateValue;
+      }
     }
+
+    $template.attr(i, newValue);
   }
 }
 
 
-function _parseConfiguraion(currentSrcPath, markupType, root, options, templates) {
+function _parseConfiguraion(currentSrcPath, markupType, $root, options, templates) {
   var configRegex = /<!--\s*components:([\w\W]*?)-->\t*(?:\r?\n)?/i;
-  var comments = [];
 
-  var comments = [];
-  root.visit(function() {
+  $root.contents().each(function() {
     if (this.type == markupType.comment) {
       var serialize = this.serialize();
-      if (/<!--\s*components:\s*/.test(serialize))
-        comments.push(this);
+      var commentMatch = configRegex.exec(serialize);
+      if (commentMatch) {
+        var cnt = commentMatch[1];
+        var imports = /#?import\s*([^\s]+)(?:\s*as\s*([^\s]+))?\s*;/ig;
+        var match;
+        while (match = imports.exec(cnt)) {
+          var alias;
+          var cmpPath;
+
+          if (match[2]) {
+            alias = match[2];
+            cmpPath = match[1];
+          } else {
+            alias = path.basename(match[1]);
+            cmpPath = match[1];
+          }
+
+
+          var isDirectory = false;
+          var dir;
+          if (match[0][0] == '#') {
+            dir = path.join(path.dirname(currentSrcPath), cmpPath);
+          } else {
+            dir = path.join(options.componentsPath, cmpPath);
+          }
+
+          try {
+            isDirectory = fs.lstatSync(dir).isDirectory();
+          } catch (e) {
+
+          }
+
+          if (isDirectory) {
+            var files = glob({
+              cwd: dir
+            }, ['**/*' + options.componentsExt]);
+
+            for (var i in files) {
+              var pathWithoutExt = files[i].slice(0, -(options.componentsExt.length)); //trim extension
+              var newAlias = path.basename(pathWithoutExt);
+              _validateTagNameAnThrow(newAlias, options);
+
+              _registerTemplate(currentSrcPath, newAlias, path.join(dir, pathWithoutExt), options, templates);
+            }
+          } else {
+            _validateTagNameAnThrow(alias, options);
+            _registerTemplate(currentSrcPath, alias, dir, options, templates);
+          }
+        }
+      }
+      this.remove();
     }
   });
-
-  for (var i in comments) {
-    comments[i].remove();
-    comments[i] = comments[i].serialize();
-  }
-
-  for (var i in comments) {
-    var cnt = comments[i];
-    var imports = /#?import\s*([^\s]+)(?:\s*as\s*([^\s]+))?\s*;/ig;
-    var match;
-    while (match = imports.exec(cnt)) {
-      var alias;
-      var cmpPath;
-
-      if (match[2]) {
-        alias = match[2];
-        cmpPath = match[1];
-      } else {
-        alias = path.basename(match[1]);
-        cmpPath = match[1];
-      }
-
-
-      var isDirectory = false;
-      var dir;
-      if (match[0][0] == '#') {
-        dir = path.join(path.dirname(currentSrcPath), cmpPath);
-      } else {
-        dir = path.join(options.componentsPath, cmpPath);
-
-      }
-      try {
-        isDirectory = fs.lstatSync(dir).isDirectory();
-      } catch (e) {
-
-      }
-
-      if (isDirectory) {
-        var files = glob({
-          cwd: dir
-        }, ['**/*' + options.componentsExt]);
-
-        for (var i in files) {
-          var pathWithoutExt = files[i].slice(0, -(options.componentsExt.length)); //trim extension
-          var newAlias = path.basename(pathWithoutExt);
-          _validateTagNameAnThrow(newAlias, options);
-
-          _registerTemplate(currentSrcPath, newAlias, path.join(dir, pathWithoutExt), options, templates);
-        }
-      } else {
-        _validateTagNameAnThrow(alias, options);
-        _registerTemplate(currentSrcPath, alias, dir, options, templates);
-      }
-    }
-  }
 }
 
 function _parseTagWithContent($, currentSrcPath, template, customElt, options, templates, root) {
-  var $template = $.parse(template).children[0];
+  var $template = $($.parse(template).children[0]);
+
   var $customElt = $(customElt);
   _attrEngine($template, $customElt, options.attrAction, options.attrs);
 
-  var $content = $($template).filter('content');
+  var $content = $template.filter('content');
 
   $content.each(function() {
     if (!isIgnored(this, options)) {
       var select = this.attr('select');
 
       if (select) {
-        $customElt.children(select).insertBefore($(this));
+        $customElt.children(select).insertBefore(this);
       } else {
-        $customElt.children().insertBefore($(this));
+        $customElt.contents().insertBefore(this); //all remaining content
         return false; //all elements placed stop
       }
     }
@@ -177,39 +169,27 @@ function _parseTagWithContent($, currentSrcPath, template, customElt, options, t
   return $template;
 }
 
-function _parse($, currentSrcPath, markupType, root, options, templates, level) {
+function _parse($, currentSrcPath, markupType, $root, options, templates, level) {
+  _parseConfiguraion(currentSrcPath, markupType, $root, options, templates);
 
-  _parseConfiguraion(currentSrcPath, markupType, root, options, templates);
-  var toRemove = [];
-  root.visit(function() {
-
+  $root[0].visit(function() {
     if (this.type == markupType.element && options.validateName(this.tagName) && !isIgnored(this, options)) {
-      if (root == this) {
-        throw 'Top level custom tag is not supported, must be a child of another tag';
-      }
 
       var tagName = this.tagName;
       var template = _loadTemplate(tagName, options, templates);
 
-      var newElt = _parseTagWithContent($, template.path, template.cnt, this, options, templates);
-      this.insertBefore(newElt);
-      toRemove.push(this);
-      _parse($, template.path, markupType, newElt, options, templates, level + 1);
+
+      var $newElt = _parseTagWithContent($, template.path, template.cnt, this, options, templates);
+
+      this.insertBefore($newElt[0]);
+      this.remove();
+
+      _parse($, template.path, markupType, $newElt, options, templates, level + 1);
+
+      return this.visit.skipChildren;
     }
   });
-  for (var i in toRemove)
-    toRemove[i].remove();
-  return root;
 }
-
-function _preParse(src, root, opt, templates) {
-  for (var i in root) {
-    root[i]._array = root; //top level elements
-    _parse(src, root[i], opt, templates, 0);
-    root[i]._array = undefined;;
-  }
-}
-
 
 module.exports = {
   type: 'stream',
@@ -239,9 +219,9 @@ module.exports = {
     var markupType = wManager.dom.markupType;
     var document = wManager.convert(input, 'dom');
 
-    _parse($, input.wFile.src, markupType, document, opt, {});
+    _parse($, input.wFile.src, markupType, $(document), opt, {});
 
-    input.value = document.serialize();
-    input.type = 'string';
+    input.value = document;
+    input.type = 'dom';
   }
 };
