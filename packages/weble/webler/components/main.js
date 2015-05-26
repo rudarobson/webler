@@ -1,8 +1,6 @@
 var fs = require('fs');
 var path = require('path');
-var loader = require('./parser');
 var glob = require('glob-expand');
-var parser = require('./parser');
 
 function isIgnored($tag, options) {
   var attr = options.ignoreAttribute;
