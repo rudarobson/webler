@@ -86,8 +86,8 @@ function _attrEngine($template, $tag, action, attrs) {
 
 function _parseConfiguraion(currentSrcPath, markupType, $root, options, templates) {
   var configRegex = /<!--\s*components:([\w\W]*?)-->\t*(?:\r?\n)?/i;
-
-  $root.contents().each(function() {
+  var comments = [];
+  $root[0].visit(function() {
     if (this.type == markupType.comment) {
       var serialize = this.serialize();
       var commentMatch = configRegex.exec(serialize);
@@ -140,9 +140,12 @@ function _parseConfiguraion(currentSrcPath, markupType, $root, options, template
           }
         }
       }
-      this.remove();
+      comments.push(this);
     }
   });
+
+  for (var i in comments)
+    comments[i].remove();
 }
 
 function _parseTagWithContent($, currentSrcPath, template, customElt, options, templates, root) {
@@ -160,7 +163,9 @@ function _parseTagWithContent($, currentSrcPath, template, customElt, options, t
       if (select) {
         $customElt.children(select).insertBefore(this);
       } else {
-        $customElt.contents().insertBefore(this); //all remaining content
+
+        $customElt.contents().insertBefore(this);
+
         return false; //all elements placed stop
       }
     }
@@ -170,6 +175,7 @@ function _parseTagWithContent($, currentSrcPath, template, customElt, options, t
 }
 
 function _parse($, currentSrcPath, markupType, $root, options, templates, level) {
+
   _parseConfiguraion(currentSrcPath, markupType, $root, options, templates);
 
   $root[0].visit(function() {
