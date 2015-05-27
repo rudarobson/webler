@@ -678,10 +678,10 @@ for (var i = 0; i <= 9; i++) {
 
 
 var bundleAssertFiles = {
-    test0: [{
-        expected: '',
-        actual: ''
-        }]
+    test0: ['index.html'],
+    test1: ['index.html'],
+    test2: ['index.html','index.js'],
+    test3: ['index.html','index.css']
 };
 
 for (var i = 0; i <= 3; i++) {
@@ -694,7 +694,6 @@ for (var i = 0; i <= 3; i++) {
     (function (testName) {
 
         module.exports.packages.bundle[testName] = function (assert) {
-
             webler.weble({
                 src: path.join(bundleSrcBase, testName),
                 dest: path.join(bundleDestBase, testName)
@@ -702,11 +701,11 @@ for (var i = 0; i <= 3; i++) {
 
             webler.render();
             for (var j in bundleAssertFiles[testName]) {
-                var eq = bundleAssertFiles[testName][j];
+                var file = bundleAssertFiles[testName][j];
 
-                assert.equals(fs.readFileSync(path.join(bundleExpectedBase, testName, eq.expected)).toString(), fs.readFileSync(path.join(bundleExpectedBase, testName, eq.actual)).toString());
+                assert.equals(fs.readFileSync(path.join(bundleExpectedBase, testName, file)).toString(), fs.readFileSync(path.join(bundleDestBase, testName, file)).toString());
             }
             assert.done();
         }
-    })(testName);
+    })(bundleTestName);
 }
