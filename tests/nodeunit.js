@@ -643,11 +643,13 @@ module.exports['html-parser-serialization'] = {
 
 
 module.exports.packages = {
-    components: {}
+    components: {},
+    bundle: {}
 }
 
 webler.loadModule('htmlmin');
 webler.loadModule('components');
+webler.loadModule('bundle');
 
 for (var i = 0; i <= 9; i++) {
     var testName = 'test' + i;
@@ -669,6 +671,41 @@ for (var i = 0; i <= 9; i++) {
             webler.render();
 
             assert.equals(fs.readFileSync(path.join(expectedBase, testName, 'index.html')).toString(), fs.readFileSync(path.join(destBase, testName, 'index.html')).toString());
+            assert.done();
+        }
+    })(testName);
+}
+
+
+var bundleAssertFiles = {
+    test0: [{
+        expected: '',
+        actual: ''
+        }]
+};
+
+for (var i = 0; i <= 3; i++) {
+    var bundleTestName = 'test' + i;
+    var bundleSrcBase = 'package_tests/bundle/tests';
+    var bundleDestBase = 'package_tests/bundle/tests_results';
+    var bundleExpectedBase = 'package_tests/bundle/expected';
+
+
+    (function (testName) {
+
+        module.exports.packages.bundle[testName] = function (assert) {
+
+            webler.weble({
+                src: path.join(bundleSrcBase, testName),
+                dest: path.join(bundleDestBase, testName)
+            }).bundle().htmlmin();
+
+            webler.render();
+            for (var j in bundleAssertFiles[testName]) {
+                var eq = bundleAssertFiles[testName][j];
+
+                assert.equals(fs.readFileSync(path.join(bundleExpectedBase, testName, eq.expected)).toString(), fs.readFileSync(path.join(bundleExpectedBase, testName, eq.actual)).toString());
+            }
             assert.done();
         }
     })(testName);
