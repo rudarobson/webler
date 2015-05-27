@@ -285,11 +285,11 @@ function addBundleToCollection(collection, wp, type, fileType, vDest, vSrc, html
 
 module.exports = {
     type: 'stream',
-    require: ['gOptions','wp'],
-    start: function (dom, options, gOptions,wp) {
+    require: ['gOptions', 'wp'],
+    start: function (dom, options, gOptions, wp) {
         var bundleIgnoreAttr = 'bundle-ignore';
         var opt = options;
-        var isDebug = wManager.gOptions.debug || false;
+        var isDebug = gOptions.debug || false;
 
         var newSassIncludes = [];
         var oldIncludes = opt.styles.sass.includePaths;
