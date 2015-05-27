@@ -1,6 +1,7 @@
 module.exports = {
   type: 'stream',//type maybe stream, or bulk
-  start: function(options) { //runtime arguments with options
+  require:['options','$','gOptions'],
+  start: function(dom,options,$,gOptions) { //runtime arguments with options
 
   }
   //setup: function(){}, //this function is called after plugin is loaded and only once
