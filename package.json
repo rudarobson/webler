@@ -14,7 +14,7 @@
   ],
   "author": "Rudá Robson",
   "type": "Copyright 2015 Rudá Robson",
-  "main": "lib/webler.js",
+  "main": "lib/core/webler.js",
   "bin": {
     "weble": "bin/weble",
     "webler": "bin/webler"

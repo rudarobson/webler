@@ -19,6 +19,4 @@ module.exports = function(manager) {
 
   manager.mkdirp('src');
   manager.mkdirp('src/components');
-  manager.mkdirp('src/layouts');
-  manager.mkdirp('src/pages');
 }

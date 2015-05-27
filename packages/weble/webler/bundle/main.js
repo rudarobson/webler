@@ -1,15 +1,13 @@
 var ujs = require("uglify-js");
 var ccss = require('clean-css');
 var sass = require('node-sass');
-
 var fs = require('fs');
 var path = require('path');
-var utils = require('../../../../lib/utils/utils');
-var time = require('../../../../lib/utils/time');
-var system = require('../../../../lib/utils/system');
-var log = require('../../../../lib/utils/log');
-var os = require('os');
-var weblerScript = require('../../../../lib/weblerscript');
+var utils = _wRequire('utils');
+
+var system = _wRequire('system');
+var log = wRequire('log');
+var weblerScript = wRequire('weblerscript');
 
 var supportedTypes = {
   scripts: {

@@ -2,6 +2,6 @@ For Developers:
 -- install nodejs
 -- run npm install
 -- run npm link
--- cd lib and run npm link webler (linking to webler.js)
+-- cd lib/core and run npm link webler (linking to webler.js)
 
 -- install mono (.net support for razor) [Linux only]

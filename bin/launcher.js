@@ -1,3 +1,5 @@
+require('../lib/core/bootstrap_global');
+
 function weble(argv) {
   var config = argv._[0];
 
@@ -16,10 +18,10 @@ function init(argv) {
   var path = require('path');
   var fs = require('fs');
   var glob = require('globule');
-  var log = require('../lib/utils/log');
-  var utils = require('../lib/utils/utils');
-  var system = require('../lib/utils/system');
-  var vpCreator = require('../lib/utils/virtualPath');
+  var log = wRequire('log');
+  var utils = _wRequire('utils');
+  var system = _wRequire('system');
+  var vpCreator = _wRequire('vp');
 
   var name = (argv.length > 0) ? _[0] : undefined;
   var userName = (argv.length > 1) ? _[1] : 'webler';
@@ -27,14 +29,14 @@ function init(argv) {
   if (argv._.length > 0)
     name = argv._[0];
   if (!name)
-    name = 'webler';
+    name = 'default';
 
   var base;
   if (/^\.?\.?(\/|\\)/.test(name)) { //relative
     base = path.join(process.cwd(), name);
   } else {
     var weblerPath = path.dirname(require.resolve('webler'));
-    base = path.join(weblerPath, '../packages/init',userName, name);
+    base = path.join(weblerPath, '../../packages/init', userName, name);
   }
   var vp = vpCreator(base, './');
 
@@ -50,10 +52,10 @@ function init(argv) {
     });
   } else { //just copy packages files
     var cwd = vp.resolveSrc('~package'); // path.join(base, 'package');
-    var files = glob({
-      cwd: cwd,
+    var files = glob.find(['**/*.*'], {
+      srcBase: cwd,
       filter: 'isFile'
-    }, '**/*.*');
+    });
 
     for (var i in files) {
       var content = fs.readFileSync(path.join(cwd, files[i]));
@@ -64,12 +66,12 @@ function init(argv) {
 
 function watch(argv) {
   var watch = require('node-watch');
-  var scopeCreator = require('../lib/weblerScopeCreator');
+  var scopeCreator = require('../lib/core/weblerScopeCreator');
   var path = require('path');
   var colors = require('colors');
   var globule = require('globule');
-  var vpCreator = require('../lib/utils/virtualPath');
-  var solveGlobs = require('../lib/fileSolver');
+  var vpCreator = wRequire('vp');
+  var solveGlobs = require('../lib/core/fileSolver');
 
   var srcDir = argv._[0];
   var configName;
