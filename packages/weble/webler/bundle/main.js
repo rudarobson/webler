@@ -106,6 +106,8 @@ function ScriptsBundle(wp, opt) {
   this.addWithMarkup = function(markup) {
     var type = markup.getAttribute('type');
     var src = markup.getAttribute('src');
+    if (!src)
+      src = markup.getAttribute('bundle');
     var f = expandFiles(src, type, wp, 'js');
     files = files.concat(f);
 
@@ -149,6 +151,8 @@ function StylesBundle(wp, opt) {
   this.addWithMarkup = function(markup) {
     var type = markup.getAttribute('type');
     var src = markup.getAttribute('href');
+    if (!src)
+      src = markup.getAttribute('bundle');
     var f = expandFiles(src, type, wp, 'css');
     files = files.concat(f);
 
@@ -207,15 +211,7 @@ function CopyBundle(wp) {
   var markups = [];
 
   this.addWithMarkup = function(markup) {
-    var src
-    switch (markup.tagName) {
-      case 'link':
-        src = markup.getAttribute('href');
-        break;
-      case 'bundle':
-        src = markup.getAttribute('src');
-        break;
-    }
+    var src = markup.getAttribute('src');
 
     markups.push(markup);
     var f = expandFiles(src, undefined, wp, null);
