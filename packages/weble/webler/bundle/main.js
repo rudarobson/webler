@@ -298,12 +298,12 @@ function addBundleToCollection(collection, wp, type, fileType, vDest, vSrc, html
     return;
 
   if (!type) {
-    log.error('missing type at: ' + script.html())
+    log.error('missing type at: ' + elt.serialize())
     log.error('\n parsing: ' + htmlSrc);
   }
 
   if (!src) {
-    log.error('missing src at: ' + script.html());
+    log.error('missing src at: ' + elt.serialize());
     log.error('\n parsing: ' + htmlSrc);
   }
 
@@ -405,6 +405,7 @@ module.exports = {
           case 'img':
             src = this.attr('src');
             dest = this.attr('bundle');
+            type = 'copy'
             fileType = 'img';
             break;
 
@@ -434,7 +435,7 @@ module.exports = {
             }
             break;
           case 'img':
-            this.setAttribute(refAttr, ref);
+            this.setAttribute('src', ref);
             break;
         }
 
