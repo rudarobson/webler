@@ -9,22 +9,6 @@ var system = _wRequire('system');
 var log = wRequire('log');
 var weblerScript = wRequire('weblerscript');
 
-var supportedTypes = {
-  scripts: {
-    javascript: true,
-    js: true,
-    ts: true,
-    typescript: true
-  },
-  styles: {
-    sass: true,
-    css: true
-  },
-  copy: {
-
-  }
-}
-
 function generateUniquePathInDir(prefix, fileName, dir) {
   var generated = path.join(dir, fileName);
   return generated;
@@ -161,10 +145,7 @@ var alreadyCopiedFiles = {};
  * @param key is the destination path
  */
 function renderBundle(type, key, wp, isDebug, opt, bundle) {
-  var pureScriptsFiles = [];
-  var renderedFiles = []
   var destCode = wp.vp.resolveDest(key);
-
 
   if (type != 'styles' && type != 'scripts' && type != 'copy') {
     log.error('bundle: ' + type + ' is not supported');
@@ -231,14 +212,13 @@ function renderBundle(type, key, wp, isDebug, opt, bundle) {
   }
 
   return compressors[type](toCompress, isDebug, destCode);
-
 }
 
 function BundleCollection() {
   this.bundles = {}
 
   this.add = function(type, key) {
-    if (!supportedTypes[type]) {
+    if (!processors[type]) {
       log.error('Type: ' + type + ' is not supported!')
       system.exit(-1);
     }
