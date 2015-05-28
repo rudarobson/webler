@@ -4,7 +4,7 @@ var sass = require('node-sass');
 var fs = require('fs');
 var path = require('path');
 var utils = _wRequire('utils');
-
+var globule = wRequire('globule');
 var system = _wRequire('system');
 var log = wRequire('log');
 var weblerScript = wRequire('weblerscript');
@@ -105,6 +105,48 @@ var compressors = {
   }
 }
 
+
+/**
+ * expandFiles - expands webler scripts and globs
+ *
+ * @return {type}  description
+ */
+function expandFiles(files, wp, defaultFileType) {
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i];
+    var srcs = undefined;
+    if (file.type == 'ws' || file.type == 'weblerscript') { //expand the webler script
+      srcs = weblerScript.parse(file.src, {
+        vSrc: wp.vp.vSrc(),
+        vDest: wp.vp.vDest()
+      });
+    } else { //expand glob
+      var tmp = globule.find([wp.vp.resolveSrc(file.src)], {
+        filter: 'isFile'
+      })
+      srcs = [];
+      for (var j in tmp) {
+        srcs.push({
+          type: file.type || defaultFileType,
+          src: tmp[j]
+        });
+      }
+
+    }
+
+    files.splice(i, 1);
+
+    if (srcs) {
+      for (var j in srcs) {
+        files.splice(i, 0, srcs[j]);
+        if (!srcs[j].type)
+          srcs[j].type = defaultFileType;
+      }
+      i += srcs.length; //skip files added
+    }
+  }
+}
+
 /*
  * key is type_destination
  * value is an array of bundled files
@@ -146,24 +188,7 @@ function renderBundle(type, key, wp, isDebug, opt, bundle) {
       break;
   }
 
-  for (var i = 0; i < files.length; i++) {
-    var file = files[i];
-    if (file.type == 'ws' || file.type == 'weblerscript') { //expand the webler script
-      var srcs = weblerScript.parse(file.src, {
-        vSrc: wp.vp.vSrc(),
-        vDest: wp.vp.vDest()
-      });
-
-      files.splice(i, 1);
-
-      for (var j in srcs) {
-        files.splice(i, 0, srcs[j]);
-        if (!srcs[j].type)
-          srcs[j].type = defaultFileType;
-      }
-      i += srcs.length; //skip files added
-    }
-  }
+  expandFiles(files, wp, defaultFileType);
 
   var toCompress = [];
 
