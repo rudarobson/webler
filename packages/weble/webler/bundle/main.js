@@ -101,15 +101,7 @@ var compressors = {
     return [destCode];
   },
   copy: function(files, isDebug, destCode) {
-    if (isDebug) {
-      return justCopyFiles(files, destCode, path.extname(destCode));
-    }
-    var f = [];
-    for (var i in files)
-      f.push(files[i].temp);
-    var result = new ccss().minify(utils.concatFiles(f)).styles;
-    utils.safeWriteFile(utils.changeFileExt(destCode, '.css'), result);
-    return [destCode];
+    return justCopyFiles(files, destCode, path.extname(destCode));
   }
 }
 
