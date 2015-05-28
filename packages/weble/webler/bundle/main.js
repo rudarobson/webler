@@ -110,7 +110,7 @@ function expandFiles(files, wp, defaultFileType) {
     } else { //expand glob
       var tmp = globule.find([wp.vp.resolveSrc(file.src)], {
         filter: 'isFile'
-      })
+      });
       srcs = [];
       for (var j in tmp) {
         srcs.push({
