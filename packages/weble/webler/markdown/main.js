@@ -3,9 +3,9 @@ var marked = require('marked');
 var useHighlightjs = false;
 module.exports = {
   type: 'stream',
-  start: function(input, wManager) {
-    var cnt = wManager.convert(input, 'string');
-    var options = wManager.options;
+  start: function(resource, options) {
+    var cnt = resource.value('string');
+
     var md = /<!--\s*markdown:\s*([\S]*?)?\s*-->([\s\S]*?)<!--\s*\/markdown\s*-->/g;
     var startMatch;
     if (options)
@@ -35,8 +35,7 @@ module.exports = {
       cnt = cnt.replace(startMatch[0], html);
     }
 
-    input.value = cnt;
-    input.type = 'string';
+    resource.set('string', cnt);
   },
   api: {
     useHighlightjs: function() {

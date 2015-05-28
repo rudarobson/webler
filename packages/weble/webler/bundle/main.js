@@ -176,17 +176,20 @@ function renderBundle(type, key, wp, isDebug, opt, bundle) {
 
     var fileProcessor = processors[type];
     var fileType;
-    switch (files[i].type) {
-      case 'js':
-      case 'javascript':
-        fileType = 'javascript';
-        break;
-      default:
-        fileType = files[i].type;
+    if (type == 'scripts') {
+      switch (files[i].type) {
+        case 'js':
+        case 'javascript':
+          fileType = 'javascript';
+          break;
+        default:
+          fileType = files[i].type;
+      }
+    } else if (type == 'styles') {
+      fileType = files[i].type; //directly match
     }
 
-    if (!fileProcessor[fileType]) {
-      console.log(fileType);
+    if (!(fileType in fileProcessor)) {
       log.error('bundle: ' + type + ' does not support ' + fileType + ' file type at bundle: ' + key);
       system.exit(-1);
     }
@@ -320,6 +323,8 @@ module.exports = {
         else {
           if (/\s*text\/javascript\s*/.test(fileType))
             fileType = 'js';
+          else if (/\s*text\/weblerscript\s*/.test(fileType))
+            fileType = 'ws';
           else {
             log.error('file type :' + this.getAttribute('type') + ' not supported');
             log.normal(this.serialize());
@@ -328,6 +333,8 @@ module.exports = {
         }
 
         var ref = addBundleToCollection(collection, wp, 'scripts', fileType, dest, src, resource.src(), resource.dest(), this);
+        if (this.hasAttribute('type'))
+          this.setAttribute('type', 'text/javascript');
         if (isDebug) {
           this.removeAttribute('bundle');
           this.setAttribute('src', ref);
@@ -365,6 +372,8 @@ module.exports = {
             fileType = 'css';
           else if (/\s*text\/sass\s*/.test(fileType))
             fileType = 'sass';
+          else if (/\s*text\/weblerscript\s*/.test(fileType))
+            fileType = 'ws';
           else {
             log.error('file type :' + this.getAttribute('type') + ' not supported');
             log.normal(this.serialize());

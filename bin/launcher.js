@@ -70,7 +70,7 @@ function watch(argv) {
   var path = require('path');
   var colors = require('colors');
   var globule = require('globule');
-  var vpCreator = wRequire('vp');
+  var vpCreator = _wRequire('vp');
   var solveGlobs = require('../lib/core/fileSolver');
 
   var srcDir = argv._[0];
