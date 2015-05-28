@@ -19,6 +19,9 @@ var supportedTypes = {
   styles: {
     sass: true,
     css: true
+  },
+  copy: {
+
   }
 }
 
@@ -67,7 +70,9 @@ var processors = {
     }
   },
   copy: {
-
+    img: function(src, isDebug, opt, wp) {
+      return src;
+    }
   }
 }
 
@@ -124,7 +129,7 @@ function renderBundle(type, key, wp, isDebug, opt, bundle) {
   var destCode = wp.vp.resolveDest(key);
 
 
-  if (type != 'styles' && type != 'scripts') {
+  if (type != 'styles' && type != 'scripts' && type != 'copy') {
     log.error('bundle: ' + type + ' is not supported');
     system.exit(-1);
   }
@@ -185,7 +190,7 @@ function renderBundle(type, key, wp, isDebug, opt, bundle) {
         default:
           fileType = files[i].type;
       }
-    } else if (type == 'styles') {
+    } else {
       fileType = files[i].type; //directly match
     }
 
@@ -213,8 +218,10 @@ function BundleCollection() {
   this.bundles = {}
 
   this.add = function(type, key) {
-    if (!supportedTypes[type])
-      system.exitWithMessage('Type: ' + type + ' is not supported!');
+    if (!supportedTypes[type]) {
+      log.error('Type: ' + type + ' is not supported!')
+      system.exit(-1);
+    }
 
     if (!this.bundles[type])
       this.bundles[type] = {};
