@@ -70,6 +70,9 @@ var processors = {
     }
   },
   copy: {
+    copy: function(src, isDebug, opt, wp) {
+      return src;
+    },
     img: function(src, isDebug, opt, wp) {
       return src;
     }
@@ -331,128 +334,121 @@ module.exports = {
     var collection = new BundleCollection();
     var first = true;
 
-    $dom.filter('script[bundle]').each(function() {
-      if (!this.hasAttribute(bundleIgnoreAttr)) {
-        var dest = this.attr('bundle');
-        var fileType = this.attr('type');
-        var src = this.attr('src');
+    var placedTags = {
+      scripts: {},
+      styles: {}
+    };
 
-        if (!src)
-          src = dest;
-        if (!dest)
-          dest = src;
-
-        if (!fileType)
-          fileType = 'js';
-        else {
-          if (/\s*text\/javascript\s*/.test(fileType))
-            fileType = 'js';
-          else if (/\s*text\/weblerscript\s*/.test(fileType))
-            fileType = 'ws';
-          else {
-            log.error('file type :' + this.getAttribute('type') + ' not supported');
-            log.normal(this.serialize());
-            system.exit(-1);
-          }
-        }
-
-        var ref = addBundleToCollection(collection, wp, 'scripts', fileType, dest, src, resource.src(), resource.dest(), this);
-        if (this.hasAttribute('type'))
-          this.setAttribute('type', 'text/javascript');
-        if (isDebug) {
-          this.removeAttribute('bundle');
-          this.setAttribute('src', ref);
-        } else {
-          if (first) {
-            this.removeAttribute('bundle');
-            this.setAttribute('src', ref);
-            first = false;
-          } else
-            this.remove();
-        }
-
-      } else {
-        this.removeAttribute(bundleIgnoreAttr);
-      }
-    });
-
-    first = true;
-
-    $dom.filter('link[bundle]').each(function() {
-      if (!this.hasAttribute(bundleIgnoreAttr)) {
-        var dest = this.attr('bundle');
-        var fileType = this.attr('type');
-        var src = this.attr('href');
-
-        if (!src)
-          src = dest;
-        if (!dest)
-          dest = src;
-
-        if (!fileType)
-          fileType = 'css';
-        else {
-          if (/\s*text\/css\s*/.test(fileType))
-            fileType = 'css';
-          else if (/\s*text\/sass\s*/.test(fileType))
-            fileType = 'sass';
-          else if (/\s*text\/weblerscript\s*/.test(fileType))
-            fileType = 'ws';
-          else {
-            log.error('file type :' + this.getAttribute('type') + ' not supported');
-            log.normal(this.serialize());
-            system.exit(-1);
-          }
-        }
-
-        var ref = addBundleToCollection(collection, wp, 'styles', fileType, dest, src, resource.src(), resource.dest(), this);
-        if (this.hasAttribute('type'))
-          this.setAttribute('type', 'text/css');
-        if (isDebug) {
-          this.removeAttribute('bundle');
-          this.setAttribute('href', ref);
-        } else {
-          if (first) {
-            this.removeAttribute('bundle');
-            this.setAttribute('href', ref);
-            first = false;
-          } else
-            this.remove();
-        }
-
-      } else {
-        this.removeAttribute(bundleIgnoreAttr);
-      }
-    });
-
-    $dom.filter('img[bundle]').each(function() {
+    $dom.filter('script[bundle],link[bundle],img[bundle],bundle').each(function() {
       if (!this.hasAttribute(bundleIgnoreAttr)) {
         var dest;
+        var type;
         var fileType;
         var src;
-        var refAttr;
+        var rel;
         switch (this.tagName) {
+          case 'script':
+            type = 'scripts'
+            dest = this.attr('bundle');
+            fileType = this.attr('type');
+            src = this.attr('src');
+
+            if (!fileType)
+              fileType = 'js';
+            else {
+              if (/\s*text\/javascript\s*/.test(fileType))
+                fileType = 'js';
+              else if (/\s*text\/weblerscript\s*/.test(fileType))
+                fileType = 'ws';
+              else {
+                log.error('file type :' + this.getAttribute('type') + ' not supported');
+                log.normal(this.serialize());
+                system.exit(-1);
+              }
+            }
+            break;
+          case 'bundle':
+            type = 'copy';
+            fileType = 'copy';
+            dest = this.attr('dest');
+            src = this.attr('src');
+            this.remove();
+            break;
+          case 'link':
+            type = 'styles';
+            dest = this.attr('bundle');
+            fileType = this.attr('type');
+            src = this.attr('href');
+            rel = this.attr('rel');
+            if (rel == 'bundle') {
+              type = 'copy';
+              fileType = 'copy';
+              this.remove();
+            } else {
+              if (!fileType)
+                fileType = 'css';
+              else {
+                if (/\s*text\/css\s*/.test(fileType))
+                  fileType = 'css';
+                else if (/\s*text\/sass\s*/.test(fileType))
+                  fileType = 'sass';
+                else if (/\s*text\/weblerscript\s*/.test(fileType))
+                  fileType = 'ws';
+                else {
+                  log.error('file type :' + this.getAttribute('type') + ' not supported');
+                  log.normal(this.serialize());
+                  system.exit(-1);
+                }
+              }
+            }
+            break;
           case 'img':
-            refAttr = 'src';
             src = this.attr('src');
             dest = this.attr('bundle');
-            if (!src)
-              src = dest;
-            if (!dest)
-              dest = src;
             fileType = 'img';
             break;
-          default:
-            return;
+
         }
 
-        var ref = addBundleToCollection(collection, wp, 'copy', fileType, dest, src, resource.src(), resource.dest(), this)
-        this.setAttribute(refAttr, ref);
+        if (!src)
+          src = dest;
+
+        if (!dest)
+          dest = src;
+
+        var ref = addBundleToCollection(collection, wp, type, fileType, dest, src, resource.src(), resource.dest(), this);
+        var linkOrScript = false;
+        switch (this.tagName) {
+          case 'script':
+            if (this.hasAttribute('type'))
+              this.setAttribute('type', 'text/javascript');
+            linkOrScript = true;
+            this.setAttribute('src', ref);
+            break;
+          case 'link':
+            if (rel != 'bundle') {
+              linkOrScript = true;
+              if (this.hasAttribute('type') && this.getAttribute('rel') != 'copy')
+                this.setAttribute('type', 'text/css');
+              this.setAttribute('href', ref);
+            }
+            break;
+          case 'img':
+            this.setAttribute(refAttr, ref);
+            break;
+        }
+
+        if (!isDebug && linkOrScript) {
+          if (!placedTags[ref]) {
+            this.removeAttribute('bundle');
+            placedTags[ref] = true;
+          } else
+            this.remove();
+        }
       } else {
         this.removeAttribute(bundleIgnoreAttr);
       }
-    })
-
+    });
 
 
     var bundles = collection.bundles;
@@ -475,7 +471,9 @@ module.exports = {
     }
 
     resource.set('dom', $dom[0]);
-
+  },
+  setup: function() {
+    wRequire('$').voidElements.push('bundle'); //add additional void element
   },
   config: {
     styles: {

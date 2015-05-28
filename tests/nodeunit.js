@@ -683,10 +683,11 @@ var bundleAssertFiles = {
     test1: ['index.html'],
     test2: ['index.html','index.js'],
     test3: ['index.html','index.css'],
-    test4: ['index.html','index.js']
+    test4: ['index.html','index.js'],
+    test5: ['index.html','index.css']
 };
 
-for (var i = 0; i <= 4; i++) {
+for (var i = 0; i <= 6; i++) {
     var bundleTestName = 'test' + i;
     var bundleSrcBase = 'package_tests/bundle/tests';
     var bundleDestBase = 'package_tests/bundle/tests_results';
