@@ -161,14 +161,12 @@ function _parseTagWithContent($, currentSrcPath, template, customElt, options, t
             if (select) {
                 $customElt.children(select).insertBefore(this);
             } else {
-
                 $customElt.contents().insertBefore(this);
-
                 return false; //all elements placed stop
             }
         }
     }).remove();
-
+    
     return $template;
 }
 

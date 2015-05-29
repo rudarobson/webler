@@ -191,7 +191,7 @@ function StylesBundle(wp, opt) {
 
     var markup = markups[0];
     for (var i in refs) {
-      var link = dom.Element('link');
+      var link = dom.Element('link', true); //self closing
       if (markup.hasAttribute('type'))
         link.setAttribute('type', 'text/css');
       if (markup.hasAttribute('rel'))
@@ -203,6 +203,30 @@ function StylesBundle(wp, opt) {
 
     for (var i in markups)
       markups[i].remove();
+  }
+}
+
+function ImgBundle(wp) {
+  var files = [];
+  var markups = [];
+
+  this.addWithMarkup = function(markup) {
+    var src = markup.getAttribute('src');
+    
+    markups.push(markup);
+    var f = expandFiles(src, undefined, wp, null);
+    files = files.concat(f);
+  }
+
+  this.render = function(dest) {
+    dest = wp.vp.resolveDest(dest);
+    var toRender = [];
+    for (var i in files)
+      toRender.push(wp.vp.resolveSrc(files[i].src));
+
+    justCopyFiles(toRender, wp, dest, path.extname(dest));
+    for (var i in markups)
+      markups[i].setAttribute('src', wp.vp.resolveDest(dest));
   }
 }
 
@@ -251,6 +275,8 @@ function createBundleFromElement(bundles, elt, wp, opt) {
   switch (elt.tagName) {
     case 'script':
       var dest = elt.getAttribute('bundle');
+      if (!dest)
+        dest = elt.getAttribute('src');
       key = 'scripts_' + dest;
       if (!bundles[key]) {
         bundles[key] = {
@@ -262,8 +288,24 @@ function createBundleFromElement(bundles, elt, wp, opt) {
       bundle = bundles[key].bundle;
 
       break;
+    case 'img':
+      var dest = elt.getAttribute('bundle');
+      if (!dest)
+        dest = elt.getAttribute('src');
+      key = 'img_' + dest;
+      if (!bundles[key]) {
+        bundles[key] = {
+          bundle: new ImgBundle(wp),
+          dest: dest
+        };
+      }
+
+      bundle = bundles[key].bundle;
+      break;
     case 'bundle':
       var dest = elt.getAttribute('dest');
+      if (!dest)
+        dest = elt.getAttribute('src');
       key = 'copy_' + dest;
       if (!bundles[key]) {
         bundles[key] = {
@@ -277,6 +319,8 @@ function createBundleFromElement(bundles, elt, wp, opt) {
       break;
     case 'link':
       var dest = elt.getAttribute('bundle');
+      if (!dest)
+        dest = elt.getAttribute('href');
       key = 'styles_' + dest;
       if (!bundles[key]) {
         bundles[key] = {
@@ -319,7 +363,7 @@ module.exports = {
     };
 
     var bundles = {};
-    $dom.filter('script[bundle],link[bundle],img[bundle],bundle').each(function() {
+    $dom.filter('script[bundle],script[src^="~"],link[bundle],link[href^="~"],img[bundle],img[src^="~"],bundle').each(function() {
       if (!this.hasAttribute(bundleIgnoreAttr)) {
         createBundleFromElement(bundles, this, wp, opt);
       } else {
