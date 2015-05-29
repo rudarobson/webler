@@ -65,60 +65,7 @@ function init(argv) {
 }
 
 function watch(argv) {
-  var watch = require('node-watch');
-  var scopeCreator = require('../lib/core/weblerScopeCreator');
-  var path = require('path');
-  var colors = require('colors');
-  var globule = require('globule');
-  var vpCreator = _wRequire('vp');
-  var solveGlobs = require('../lib/core/fileSolver');
-
-  var srcDir = argv._[0];
-  var configName;
-  if (argv._.length > 1)
-    configName = argv._[1];
-  else
-    configName = 'develop';
-
-  console.log('Watching ' + srcDir + '...');
-
-  function executeWebler(filename, configName, exp) {
-    try {
-      var webler = scopeCreator({
-        fileSolver: function(globs, srcRoot, destRoot) {
-          return solveGlobs(globs, srcRoot, destRoot, filename);
-        },
-        exportsOptions: exp
-      });
-
-      if (filename) {
-        console.log('Changes to: ' + filename);
-        console.log('');
-      }
-
-      var f = require(path.join(process.cwd(), 'webler.js'));
-
-      f[configName](webler);
-
-    } catch (ex) {
-      console.log('');
-      console.log(colors.red('Exception thrown:'));
-      console.log(ex);
-    }
-  }
-
-  var exp = {};
-
-  var _log = console.log;
-  console.log = function() {
-
-  }; //suppress first logs
-  executeWebler('', configName, exp);
-  console.log = _log;
-
-  watch(srcDir, function(filename) {
-    executeWebler(filename, configName)
-  });
+  require('./watch')(argv);
 }
 
 module.exports = {
