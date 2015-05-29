@@ -6,30 +6,26 @@ var globule = require('globule');
 var vpCreator = _wRequire('vp');
 var solveGlobs = require('../lib/core/fileSolver');
 
+var cluster = require('cluster');
 
 function executeWebler(filename, configName, exp) {
-  try {
-    var webler = scopeCreator({
-      fileSolver: function(globs, srcRoot, destRoot) {
-        return solveGlobs(globs, srcRoot, destRoot, filename);
-      },
-      exportsOptions: exp
-    });
 
-    if (filename) {
-      console.log('Changes to: ' + filename);
-      console.log('');
-    }
+  var webler = scopeCreator({
+    fileSolver: function(globs, srcRoot, destRoot) {
+      return solveGlobs(globs, srcRoot, destRoot, filename);
+    },
+    exportsOptions: exp
+  });
 
-    var f = require(path.join(process.cwd(), 'webler.js'));
-
-    f[configName](webler);
-
-  } catch (ex) {
+  if (filename) {
+    console.log('Changes to: ' + filename);
     console.log('');
-    console.log(colors.red('Exception thrown:'));
-    console.log(ex);
   }
+
+  var f = require(path.join(process.cwd(), 'webler.js'));
+
+  f[configName](webler);
+
 }
 
 
@@ -40,16 +36,20 @@ function launchLiveCompiler(p) {
 }
 
 
+function launchCompiler(configName, srcDir) {
+  return cluster.fork({
+    watch_work_name: 'compiler',
+    watch_work_configName: configName,
+    watch_work_srcDir: srcDir
+  });
+}
+
 function clusterize(srcDir, configName, serverRoot, argServer) {
-  var cluster = require('cluster');
+
 
   if (cluster.isMaster) {
     var server;
-    var compiler = cluster.fork({
-      watch_work_name: 'compiler',
-      watch_work_configName: configName,
-      watch_work_srcDir: srcDir
-    });
+    var compiler = launchCompiler(configName, srcDir);
 
     if (argServer) {
       server = cluster.fork({
@@ -70,15 +70,21 @@ function clusterize(srcDir, configName, serverRoot, argServer) {
       process.emit('SIGINT');
     });
 
-
     cluster.on('exit', function(worker, code, signal) {
       console.log('worker ' + worker.process.pid + ' exited');
     });
 
     process.on('SIGINT', function() {
+      console.log('Killing compiler');
       compiler.kill();
       if (server) {
-        server.disconnect();
+        console.log('Killing server');
+        try {
+          server.disconnect();
+        } catch (ex) {
+
+        }
+
         server.kill();
       }
       process.exit(0);
@@ -92,15 +98,18 @@ function clusterize(srcDir, configName, serverRoot, argServer) {
         host: env.watch_work_host,
         root: env.watch_work_root,
         openBrowser: env.watch_work_openBrowser
-      }
-      console.log('Launching Server at ' + p.root + '...');
+      };
 
+      console.log('Launching Server at ' + p.root + '...');
+      require(path.join(path.dirname(require.resolve('webler')), '../server/launch-server')).launch(p);
     } else {
+
       console.log('Watching ' + env.watch_work_srcDir + '...');
       launchLiveCompiler({
         configName: env.watch_work_configName,
         srcDir: env.watch_work_srcDir
       });
+
     }
   }
 }
@@ -118,7 +127,11 @@ module.exports = function(argv) {
 
   var _log = console.log;
   console.log = function() {}; //suppress first logs
-  executeWebler('', configName, exp);
+  try { //run silentrly
+    executeWebler('', configName, exp);
+  } catch (ex) {
+
+  }
   console.log = _log;
 
   clusterize(srcDir, configName, exp.dest, argv.server);

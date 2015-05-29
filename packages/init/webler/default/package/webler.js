@@ -1,5 +1,5 @@
 module.exports.develop = function(webler) {
-  webler.loadModule('razor').loadModule('bundle').loadModule('components');
+  webler.loadModule('razor').loadModule('bundle').loadModule('components').loadModule('htmlmin');
 
   webler.weble({
     globs: {
@@ -9,7 +9,7 @@ module.exports.develop = function(webler) {
     layoutsPath: '~/_webler/layouts'
   }).bundle().components({
     componentsPath: '~/_webler/components'
-  });
+  }).htmlmin();
 
   webler.cleanDest().render();
 }
