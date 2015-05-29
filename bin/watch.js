@@ -7,6 +7,7 @@ var vpCreator = _wRequire('vp');
 var solveGlobs = require('../lib/core/fileSolver');
 
 var cluster = require('cluster');
+var cleanDestWarning = false;
 
 function executeWebler(filename, configName, exp) {
 
@@ -17,6 +18,15 @@ function executeWebler(filename, configName, exp) {
     exportsOptions: exp
   });
 
+  webler.cleanDest = function() {
+    if (!cleanDestWarning) {
+      cleanDestWarning = true;
+      log.error('cleanDest() function is suppressed on watch');
+    }
+
+    return webler;
+  }; //cannot clean dest on watch
+
   if (filename) {
     console.log('Changes to: ' + filename);
     console.log('');
@@ -25,7 +35,6 @@ function executeWebler(filename, configName, exp) {
   var f = require(path.join(process.cwd(), 'webler.js'));
 
   f[configName](webler);
-
 }
 
 
@@ -52,13 +61,21 @@ function clusterize(srcDir, configName, serverRoot, argServer) {
     var compiler = launchCompiler(configName, srcDir);
 
     if (argServer) {
-      server = cluster.fork({
-        watch_work_name: 'server',
-        watch_work_port: argServer.port,
-        watch_work_host: argServer.host,
-        watch_work_root: serverRoot,
-        watch_work_openBrowser: argServer.openBrowser
-      });
+      var p = {
+        watch_work_name: 'server'
+      };
+      if (argServer.port)
+        p.watch_work_port = argServer.port;
+
+      if (argServer.host)
+        p.watch_work_host = argServer.host;
+
+      p.watch_work_root = serverRoot;
+
+      if (argServer.open)
+        p.watch_work_openBrowser = argServer.open;
+
+      server = cluster.fork(p);
     }
 
     var rl = require('readline').createInterface({
@@ -97,7 +114,7 @@ function clusterize(srcDir, configName, serverRoot, argServer) {
         port: env.watch_work_port,
         host: env.watch_work_host,
         root: env.watch_work_root,
-        openBrowser: env.watch_work_openBrowser
+        open: env.watch_work_openBrowser ? true : false
       };
 
       console.log('Launching Server at ' + p.root + '...');
@@ -129,6 +146,7 @@ module.exports = function(argv) {
   console.log = function() {}; //suppress first logs
   try { //run silentrly
     executeWebler('', configName, exp);
+    cleanDestWarning = false; //must reset it
   } catch (ex) {
 
   }
