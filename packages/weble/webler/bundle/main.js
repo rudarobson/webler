@@ -173,7 +173,7 @@ function StylesBundle(wp, opt) {
 
         var sassRes = sass.renderSync(curOpt);
 
-        toRender.push(wp.tp.write(sassRes.css));
+        toRender.push(wp.tp.write(sassRes.css, files[i].src));
 
       } else
         toRender.push(files[i].src);
@@ -212,7 +212,7 @@ function ImgBundle(wp) {
 
   this.addWithMarkup = function(markup) {
     var src = markup.getAttribute('src');
-    
+
     markups.push(markup);
     var f = expandFiles(src, undefined, wp, null);
     files = files.concat(f);
