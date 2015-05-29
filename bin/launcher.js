@@ -40,7 +40,7 @@ function init(argv) {
   }
   var vp = vpCreator(base, './');
 
-  var initFile = vp.resolveSrc('~init.js'); // path.join(base, 'init.js');
+  var initFile = vp.resolveSrc('~/init.js'); // path.join(base, 'init.js');
 
   if (fs.existsSync(initFile)) { //execute file initalizer
     require(initFile)({

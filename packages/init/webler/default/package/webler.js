@@ -1,12 +1,15 @@
 module.exports.develop = function(webler) {
-  webler.loadModule('razor').loadModule('bundle');
+  webler.loadModule('razor').loadModule('bundle').loadModule('components');
 
   webler.weble({
     globs: {
-      cwd: '~pages', //do not include layouts folder
-      src: ['**/*.@(html|cshtml)', '!**/_ViewStart.cshtml'] //ignore _ViewStart.cshtml for razor
+      src: ['**/*.@(html|cshtml)', '!**/_ViewStart.cshtml', '!_webler/**/*.*'] //ignore _ViewStart.cshtml for razor
     }
-  }).razor().bundle();
+  }).razor({
+    layoutsPath: '~/_webler/layouts'
+  }).bundle().components({
+    componentsPath: '~/_webler/components'
+  });
 
   webler.cleanDest().render();
 }

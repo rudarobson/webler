@@ -2,7 +2,8 @@ var path = require('path');
 var fs = require('fs');
 
 module.exports = function(manager) {
-  var cwd = manager.vp.resolveSrc('~package');
+  var cwd = manager.vp.resolveSrc('~/package');
+  
   var files = manager.glob.find(['**/*.*'],{
     srcBase: cwd,
     filter: 'isFile'
@@ -18,5 +19,5 @@ module.exports = function(manager) {
   }
 
   manager.mkdirp('src');
-  manager.mkdirp('src/components');
+  manager.mkdirp('src/_webler/components');
 }
