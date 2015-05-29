@@ -81,26 +81,43 @@ function watch(argv) {
     configName = 'develop';
 
   console.log('Watching ' + srcDir + '...');
-  watch(srcDir, function(filename) {
 
+  function executeWebler(filename, configName, exp) {
     try {
       var webler = scopeCreator({
         fileSolver: function(globs, srcRoot, destRoot) {
           return solveGlobs(globs, srcRoot, destRoot, filename);
-        }
-      })
+        },
+        exportsOptions: exp
+      });
+
       if (filename) {
         console.log('Changes to: ' + filename);
         console.log('');
       }
 
       var f = require(path.join(process.cwd(), 'webler.js'));
+
       f[configName](webler);
+
     } catch (ex) {
       console.log('');
       console.log(colors.red('Exception thrown:'));
       console.log(ex);
     }
+  }
+
+  var exp = {};
+
+  var _log = console.log;
+  console.log = function() {
+
+  }; //suppress first logs
+  executeWebler('', configName, exp);
+  console.log = _log;
+
+  watch(srcDir, function(filename) {
+    executeWebler(filename, configName)
   });
 }
 
