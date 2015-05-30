@@ -1,0 +1,14 @@
+{
+  ":root":0,
+  ":nth-child":1,
+  ":nth-last-child":1,
+  ":nth-of-type":1,
+  ":nth-last-of-type":1,
+  ":first-child":0,
+  ":last-child":0,
+  ":first-of-type":0,
+  ":last-of-child":0,
+  ":only-child":0,
+  ":only-of-type":0,
+  ":empty":0
+}

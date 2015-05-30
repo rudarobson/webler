@@ -6,7 +6,7 @@ var mkdirp = require('mkdirp');
 
 
 var srcFolder = 'app';
-var destFolder = './';
+var destFolder = '';
 
 function deleteFolder(folder) {
   var files = [];
