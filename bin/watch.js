@@ -88,7 +88,10 @@ function clusterize(srcDir, configName, serverRoot, argServer) {
     });
 
     cluster.on('exit', function(worker, code, signal) {
-      console.log('worker ' + worker.process.pid + ' exited');
+      if (worker.process.pid == compiler.process.pid) {
+        compiler = launchCompiler(configName, srcDir);
+      }
+
     });
 
     process.on('SIGINT', function() {
