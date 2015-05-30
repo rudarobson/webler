@@ -5,3 +5,4 @@ tests/**/tests_results
 tests/massive_tests/Simple App/release
 tests/massive_tests/Simple App/development
 npm-debug.log
+tsconfig.json
