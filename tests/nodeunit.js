@@ -2,7 +2,7 @@ require('../lib/core/bootstrap_global');
 var path = require('path');
 var fs = require('fs');
 var domBasePath = path.join(path.dirname(require.resolve('webler')), '../dom');
-var cssEngine = require(path.join(domBasePath, 'css/engine'));
+
 var htmlParser = require(path.join(domBasePath, 'html/parser'))();
 var mtype = require(path.join(domBasePath, 'markuptype'));
 var $ = require(path.join(domBasePath, 'domarray'));

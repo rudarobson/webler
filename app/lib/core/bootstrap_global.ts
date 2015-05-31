@@ -1,4 +1,7 @@
-if (!global.weblerRequire) {
+declare var wRequire;
+declare var _wRequire;
+
+if (!global.wRequire) {
   var path = require('path');
   var rootPath = path.join(require.resolve('webler'), '../../..');
   var basePath = '../../lib';

@@ -3,6 +3,6 @@ var solveGlobs = require('./fileSolver');
 
 
 
-module.exports = scopeCreator({
-  fileSolver: solveGlobs
-})
+export = scopeCreator({
+	fileSolver: solveGlobs
+});

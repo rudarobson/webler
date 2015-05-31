@@ -57,13 +57,8 @@ function scopeCreator(di) {
   var allTempFolders = {};
   var cleanTmp = true;
   var cleanUp = true;
-
-  function solveModule(userName, name, deferred) {
-    if (!deferred) {
-      deferred = name;
-      name = userName;
-      userName = undefined;
-    }
+	
+  function solveModule(name:string, deferred,userName?:string) {
 
     if (!modules[name]) {
       log.error('module: ' + name + ' not loaded');
@@ -71,7 +66,8 @@ function scopeCreator(di) {
     }
 
     var count = 0;
-    for (var i in modules[name]) {
+	var i:string;
+    for (i in modules[name]) {
       count++;
       if (count > 1)
         break;
@@ -86,7 +82,10 @@ function scopeCreator(di) {
           log.error('user not found: ' + uName);
         }
       }
-    }
+    } else {
+		if(!userName)
+			userName = i;
+	}
 
     return deferred(modules[name][userName].module);
   }
@@ -226,7 +225,7 @@ function scopeCreator(di) {
     /* [path],globs,options */
     weble: function(options) {
 
-      var opt = {};
+      var opt:any = {};
       var pipelineOrder = [];
       var weble = {};
       var globs;
@@ -253,7 +252,7 @@ function scopeCreator(di) {
       }
 
       var resources = di.fileSolver(globs, opt.src, opt.dest);
-      var wp = {};
+      var wp:any = {};
 
       wp.vp = vpCreator(opt.src, opt.dest)
 
@@ -267,7 +266,8 @@ function scopeCreator(di) {
       if (opt.temp)
         wp.tp = tpCreator(opt.temp);
 
-      function setupModuleInWebler(name) {
+	  
+      function setupModuleInWebler(name:string) {
         if (!weble[name]) {
           /* returns the weble to the user
            * or an object containing a function at(name)
@@ -317,7 +317,7 @@ function scopeCreator(di) {
             system.exit(-1);
           }
 
-          toOverride = module.config;
+          var toOverride:any = module.config;
           if (opt) {
             for (var i in opt)
               toOverride[i] = opt[i];
@@ -370,13 +370,14 @@ function scopeCreator(di) {
       return this;
     },
     render: function(unit) {
-      var toRender;
-
+      var toRender : any[];
+		var i:any;
+		var l:number;
       if (unit) {
-        for (var w = 0,
-            l = webled.length; w < l; w++) {
-          if (unit == webled[w].unit) {
-            toRender = webled.splice(w, 1);
+        for ( i = 0,
+           l = webled.length; i < l; i++) {
+          if (unit == webled[i].unit) {
+            toRender = webled.splice(i, 1);
             break;
           }
         }
@@ -422,9 +423,9 @@ function scopeCreator(di) {
         name = userName;
         userName = undefined;
       }
-      return solveModule(userName, name, function(module) {
+      return solveModule( name, function(module) {
         return module.api;
-      });
+      },userName);
     },
     doNotCleanUp: function(module) {
       cleanUp = false;
@@ -443,4 +444,4 @@ function scopeCreator(di) {
   }
 }
 
-module.exports = scopeCreator;
+export = scopeCreator;

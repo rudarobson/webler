@@ -1,3 +1,5 @@
 declare var require;
-declare var _wRequire;
-declare var wRequire;
+
+declare var global;
+declare var process;
+declare var module: { exports: any };

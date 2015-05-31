@@ -6,7 +6,7 @@ var mkdirp = require('mkdirp');
 
 
 var srcFolder = 'app';
-var destFolder = '';
+var destFolder = process.cwd();
 
 function deleteFolder(folder) {
   var files = [];
@@ -30,7 +30,7 @@ var files = glob.find(srcFolder + '/**/*.@(ts|d.ts)', {
   filter: 'isFile'
 });
 
-deleteFolder(path.join(destFolder, 'packages/weble/webler/bundle'));
+//deleteFolder(path.join(destFolder, 'packages/weble/webler/bundle'));
 deleteFolder(path.join(destFolder, 'lib'));
 
 var tsConfig = {

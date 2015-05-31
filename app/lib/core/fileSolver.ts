@@ -9,7 +9,7 @@ var resource = _wRequire('resource');
 function solveGlobs(globs, srcRoot, destRoot, /*changedFile: only used by watch*/ changedFile) {
   var files = [];
 
-  vp = vpCreator(srcRoot, destRoot);
+  var vp = vpCreator(srcRoot, destRoot);
   if (!globs)
     globs = [{}];
 
@@ -67,4 +67,4 @@ function solveGlobs(globs, srcRoot, destRoot, /*changedFile: only used by watch*
   return files;
 }
 
-module.exports = solveGlobs;
+export = solveGlobs;
