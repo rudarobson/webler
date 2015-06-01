@@ -131,7 +131,7 @@ function StylesBundle(wp, opt) {
         dest = wp.vp.resolveDest(dest);
         for (var i in files) {
             if (isSass(files[i].type)) {
-                var curOpt = {};
+                var curOpt:any = {};
                 if (opt.sass)
                     utils.mergeObjects(curOpt, opt.sass);
                 curOpt.file = wp.vp.resolveSrc(files[i].src);
@@ -274,7 +274,7 @@ function createBundleFromElement(bundles, elt, wp, opt) {
     }
     bundle.addWithMarkup(elt);
 }
-module.exports = {
+export = {
     type: 'stream',
     require: ['$', 'gOptions', 'wp'],
     start: function (resource, options, $, gOptions, wp) {

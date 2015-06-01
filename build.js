@@ -63,7 +63,7 @@ function safeWriteFile(dest, content) {
 }
 
 
-var jsfiles = glob.find('**/*.@(js|json)', {
+var jsfiles = glob.find('**/*.json', {
   filter: 'isFile',
   cwd: srcFolder
 });

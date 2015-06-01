@@ -10,7 +10,7 @@ function ___visitNode(elt, enter, exit, level) {
         level--;
       for (var i in children) {
         ret = ___visitNode(children[i], enter, exit, level); //new level down
-        if (ret == visitNode.stopSearch) {
+        if (ret == (<any>visitNode).stopSearch) {
           break;
         }
       }
@@ -20,7 +20,7 @@ function ___visitNode(elt, enter, exit, level) {
   if (exit)
     exit.call(elt);
 
-  if (ret == visitNode.stopSearch)
+  if (ret == (<any>visitNode).stopSearch)
     return ret;
 }
 
@@ -33,7 +33,7 @@ function ___visitNode(elt, enter, exit, level) {
  */
 function visitNode(elt, enter, exit, opt) {
 
-  if (typeof(exit) == typeof(0)) {
+  if (typeof (exit) == typeof (0)) {
     level = exit;
     exit = undefined;
   }
@@ -51,6 +51,8 @@ function visitNode(elt, enter, exit, opt) {
   ___visitNode(elt, enter, exit, level);
 }
 
-visitNode.skipChildren = -1;
-visitNode.stopSearch = -2;
-module.exports.visitNode = visitNode;
+(<any>visitNode).skipChildren = -1;
+(<any>visitNode).stopSearch = -2;
+export = {
+  visitNode :visitNode
+}
