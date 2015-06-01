@@ -1,0 +1,7 @@
+{
+  "author": "Rudá Robson",
+  "type": "Copyright 2015 Rudá Robson",
+  "dependencies": {
+    "html-minifier": "^0.7.2"
+  }
+}

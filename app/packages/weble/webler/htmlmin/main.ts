@@ -1,5 +1,6 @@
 var htmlmin = require('html-minifier').minify;
-module.exports = {
+
+export = {
     type: 'stream',
     config: {
         removeComments: true,
@@ -11,6 +12,7 @@ module.exports = {
     start: function (resource, options, gOptions, wp) {
         var opt = options;
         var isDebug = gOptions.debug;
+
         if (!isDebug) {
             var html = resource.value('string');
             resource.set('string', htmlmin(html, opt));
