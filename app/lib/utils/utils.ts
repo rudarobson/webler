@@ -20,7 +20,7 @@ function deleteFolder(folder) {
   }
 }
 
-export = {
+export = <Utils>{
   mergeObjects: function(obj1, obj2) {
     for (var attrname in obj2) {
       obj1[attrname] = obj2[attrname];
@@ -41,7 +41,24 @@ export = {
       return fileName;
     return fileName.substr(0, fileName.length - curExt.length) + ext;
   },
-  concatFiles: function(srcs) {
+  concatFilesObjProp: function(srcs: any[], propName: string) {
+    var res = '';
+
+    for (var i in srcs) {
+      res += fs.readFileSync(srcs[i][propName]);
+    }
+
+    return res;
+  },
+  packProps: function(objs: any[], propName: string) {
+    var ret = [];
+    for (var i in objs) {
+      ret.push(objs[i][propName]);
+    }
+
+    return ret;
+  },
+  concatFiles: function(srcs: string[]) {
     var res = '';
 
     for (var i in srcs) {
@@ -51,7 +68,7 @@ export = {
     return res;
   },
   resolveGlob: function(src, dest, cwd) {
-    var p:any = {};
+    var p: any = {};
     if (cwd) { //using cwd
       p.src = path.join(cwd, src); //fullpath
       p.dest = this.changeFileExt(path.join(dest, src), '.html');
@@ -65,7 +82,7 @@ export = {
   fileExists: function(p) {
     return fs.existsSync(p);
   },
-  isRelative:function(p){
+  isRelative: function(p) {
     return !path.isAbsolute(p);
   }
 };

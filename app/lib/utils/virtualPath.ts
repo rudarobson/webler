@@ -17,12 +17,46 @@ function VirtualPath(vSrc, vDest) {
     return vDest;
   }
 
-  this.resolveSrc = function(p) {
-    return path.join('', p.replace(/([^~])?~/g, '$1' + vSrc));
+  this.resolveSrc = function(p: string) {
+    if ((<any>p)._vpResolvedSrc)
+      return p;
+    var ret = path.join('', p.replace(/([^~])?~/g, '$1' + vSrc).replace('~~', '~'));
+    (<any>ret)._vpResolvedSrc = true;
+    return ret;
+  }
+
+  this.unresolveSrc = function(p: string) {
+    if ((<any>p)._vpUnresolvedSrc)
+      return p;
+    var ret = path.relative(vSrc, p);
+
+    if (!/$(\.\.|\/|\\)/.test(ret)) {//same path
+      ret = path.replace(vSrc, '~');//must be at the begining
+      (<any>ret)._vpUnresolvedSrc = true;
+      return ret;
+    }
+    return p;
   }
 
   this.resolveDest = function(p) {
-    return path.join('', p.replace(/([^~])?~/g, '$1' + vDest));
+    if ((<any>p)._vpResolvedDest)
+      return p;
+    var ret = path.join('', p.replace(/([^~])?~/g, '$1' + vDest).replace('~~', '~'));
+    (<any>ret)._vpResolvedDest = true;
+    return ret;
+  }
+
+  this.unresolveDest = function(p: string) {
+    if ((<any>p)._vpUnresolvedDest)
+      return p;
+    var ret = path.relative(vDest, p);
+
+    if (!/$(\.\.|\/|\\)/.test(ret)) {//same path
+      ret = path.replace(vDest, '~');//must be at the begining
+      (<any>ret)._vpUnresolvedDest = true;
+      return ret;
+    }
+    return p;
   }
 
   this.trim = function(p) {
@@ -38,6 +72,6 @@ function VirtualPath(vSrc, vDest) {
   }
 }
 
-export = function(vSrc, vDest) {
+export = function(vSrc, vDest): VPManager {
   return new VirtualPath(vSrc, vDest);
 }

@@ -26,7 +26,7 @@ function deleteFolder(folder) {
   }
 }
 
-var files = glob.find(srcFolder + '/**/*.@(ts|d.ts)', {
+var files = glob.find(srcFolder + '/**/*.ts','!' + srcFolder + '/**/*.d.ts', {
   filter: 'isFile'
 });
 
@@ -61,7 +61,6 @@ function safeWriteFile(dest, content) {
   mkdirp.sync(dir)
   fs.writeFileSync(dest, content);
 }
-
 
 var jsfiles = glob.find('**/*.json', {
   filter: 'isFile',

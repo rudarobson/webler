@@ -9,6 +9,13 @@ var system = _wRequire('system');
 var log = wRequire('log');
 var weblerScript = wRequire('weblerscript');
 var dom = wRequire('dom');
+function generateRandomPathInDir(dir) {
+    var p;
+    do {
+        p = path.join(dir, (Math.random() * 1000000).toString());
+    } while (path.existsSync(p));
+    return p;
+}
 function generateUniquePathInDir(prefix, fileName, dir) {
     var generated = path.join(dir, fileName);
     return generated;
@@ -22,21 +29,19 @@ function isJavaScript(type) {
 function isSass(type) {
     return /\s*(text\/)?sass\s*/.test(type);
 }
-/**
- * expandFiles - expands webler scripts and globs
- *
- * @return {type}  description
- */
 function expandFiles(src, type, wp, defaultFileType) {
     var srcs = [];
     if (isWeblerScript(type)) {
-        srcs = weblerScript.parse(wp.vp.resolveSrc(src), {
+        var wsFiles = weblerScript.parse(wp.vp.resolveSrc(src), {
             vSrc: wp.vp.vSrc(),
             vDest: wp.vp.vDest()
         });
-        for (var i in srcs) {
-            if (!srcs[i].type)
-                srcs[i].type = type;
+        for (var i in wsFiles) {
+            srcs.push({
+                src: wsFiles[i].src,
+                readFrom: wsFiles[i].src,
+                type: srcs[i].type || type
+            });
         }
     }
     else {
@@ -46,7 +51,8 @@ function expandFiles(src, type, wp, defaultFileType) {
         for (var j in files) {
             srcs.push({
                 type: type,
-                src: files[j]
+                src: files[j],
+                readFrom: files[j]
             });
         }
     }
@@ -56,10 +62,11 @@ function justCopyFiles(files, wp, destCode, ext) {
     var gen = [];
     var destCode = destCode;
     for (var i in files) {
-        var file = wp.vp.resolveSrc(files[i]);
-        var generatedPath = generateUniquePathInDir(utils.changeFileExt(path.basename(destCode), ''), path.basename(file), path.dirname(destCode));
+        var fileName = wp.vp.resolveSrc(files[i].src);
+        var readFrom = wp.vp.resolveSrc(files[i].readFrom);
+        var generatedPath = generateUniquePathInDir(utils.changeFileExt(path.basename(destCode), ''), path.basename(fileName), path.dirname(destCode));
         generatedPath = utils.changeFileExt(generatedPath, ext);
-        utils.safeWriteFile(generatedPath, fs.readFileSync(file));
+        utils.safeWriteFile(generatedPath, fs.readFileSync(readFrom));
         gen.push(generatedPath);
     }
     return gen;
@@ -83,8 +90,6 @@ function ScriptsBundle(wp, opt) {
     this.addWithMarkup = function (markup) {
         var type = markup.getAttribute('type');
         var src = markup.getAttribute('src');
-        if (!src)
-            src = markup.getAttribute('bundle');
         var f = expandFiles(src, type, wp, 'js');
         files = files.concat(f);
         markups.push(markup);
@@ -92,15 +97,12 @@ function ScriptsBundle(wp, opt) {
     this.render = function (dest, htmlDestDir, isDebug) {
         dest = wp.vp.resolveDest(dest);
         var refs;
-        var toRender = [];
-        for (var i in files)
-            toRender.push(wp.vp.resolveSrc(files[i].src));
         if (isDebug) {
-            refs = justCopyFiles(toRender, wp, dest, '.js');
+            refs = justCopyFiles(files, wp, dest, '.js');
         }
         else {
             refs = [dest];
-            utils.safeWriteFile(utils.changeFileExt(dest, '.js'), ujs.minify(toRender).code);
+            utils.safeWriteFile(utils.changeFileExt(dest, '.js'), ujs.minify(utils.packProps(files, 'readFrom')).code);
         }
         var markup = markups[0];
         for (var i in refs) {
@@ -127,7 +129,6 @@ function StylesBundle(wp, opt) {
         markups.push(markup);
     };
     this.render = function (dest, htmlDestDir, isDebug) {
-        var toRender = [];
         dest = wp.vp.resolveDest(dest);
         for (var i in files) {
             if (isSass(files[i].type)) {
@@ -136,18 +137,16 @@ function StylesBundle(wp, opt) {
                     utils.mergeObjects(curOpt, opt.sass);
                 curOpt.file = wp.vp.resolveSrc(files[i].src);
                 var sassRes = sass.renderSync(curOpt);
-                toRender.push(wp.tp.write(sassRes.css, files[i].src));
+                files[i].readFrom = wp.tp.write(sassRes.css, files[i].src);
             }
-            else
-                toRender.push(files[i].src);
         }
         var refs;
         if (isDebug) {
-            refs = justCopyFiles(toRender, wp, dest, '.css');
+            refs = justCopyFiles(files, wp, dest, '.css');
         }
         else {
             refs = [dest];
-            var result = new ccss().minify(utils.concatFiles(toRender)).styles;
+            var result = new ccss().minify(utils.concatFiles(utils.packProps(files, 'readFrom'))).styles;
             utils.safeWriteFile(utils.changeFileExt(dest, '.css'), result);
         }
         var markup = markups[0];
@@ -175,10 +174,7 @@ function ImgBundle(wp) {
     };
     this.render = function (dest) {
         dest = wp.vp.resolveDest(dest);
-        var toRender = [];
-        for (var i in files)
-            toRender.push(wp.vp.resolveSrc(files[i].src));
-        justCopyFiles(toRender, wp, dest, path.extname(dest));
+        justCopyFiles(files, wp, dest, path.extname(dest));
         for (var i in markups)
             markups[i].setAttribute('src', wp.vp.resolveDest(dest));
     };
@@ -194,18 +190,11 @@ function CopyBundle(wp) {
     };
     this.render = function (dest) {
         dest = wp.vp.resolveDest(dest);
-        var toRender = [];
-        for (var i in files)
-            toRender.push(wp.vp.resolveSrc(files[i].src));
-        justCopyFiles(toRender, wp, dest, path.extname(dest));
+        justCopyFiles(files, wp, dest, path.extname(dest));
         for (var i in markups)
             markups[i].remove();
     };
 }
-/*
- * key is type_destination
- * value is an array of bundled files
- */
 var alreadyRendered = {};
 var alreadyCopiedFiles = {};
 function renderBundles(bundles, htmlDestDir, isDebug) {
