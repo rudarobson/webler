@@ -20,7 +20,7 @@ function deleteFolder(folder) {
   }
 }
 
-module.exports = {
+export = {
   mergeObjects: function(obj1, obj2) {
     for (var attrname in obj2) {
       obj1[attrname] = obj2[attrname];
@@ -51,7 +51,7 @@ module.exports = {
     return res;
   },
   resolveGlob: function(src, dest, cwd) {
-    var p = {};
+    var p:any = {};
     if (cwd) { //using cwd
       p.src = path.join(cwd, src); //fullpath
       p.dest = this.changeFileExt(path.join(dest, src), '.html');

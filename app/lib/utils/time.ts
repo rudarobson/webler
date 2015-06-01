@@ -1,6 +1,6 @@
 var times = {};
 
-module.exports = {
+export = {
   start: function(id) {
     var start = process.hrtime();
     if (!times[id]) {

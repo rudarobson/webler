@@ -6,7 +6,7 @@ var typeHandlers = {};
 var utils = _wRequire('utils');
 var $ = wRequire('$');
 
-module.exports = {
+var types = {
     registerType: function (type, handler) {
         if (typeHandlers[type]) {
             log.error('error registering input type: ' + type + ' was already registered');
@@ -25,9 +25,9 @@ module.exports = {
     getConverter: function (type) {
         return typeHandlers[type];
     }
-}
+};
 
-module.exports.registerType('string', {
+types.registerType('string', {
     string: function (value) {
         return value
     },
@@ -39,12 +39,12 @@ module.exports.registerType('string', {
     }
 });
 
-module.exports.registerType('file', {
+types.registerType('file', {
     string: function (value) {
         return fs.readFileSync(value).toString();
     },
     file: function (value) {
-        return file;
+        return value;
     },
     dom: function (file, options) {
         var html = fs.readFileSync(file).toString();
@@ -52,7 +52,7 @@ module.exports.registerType('file', {
     }
 });
 
-module.exports.registerType('dom', {
+types.registerType('dom', {
     string: function ($elt) {
         return $elt.serialize();
     },
@@ -63,3 +63,5 @@ module.exports.registerType('dom', {
         return $elt;
     }
 });
+
+export = types

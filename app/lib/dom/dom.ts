@@ -151,7 +151,7 @@ Markup.prototype.prepend = function(markup) {
   if (this.children.length > 0) {
     var first = this.children[0];
     first.prev = markup;
-    markup.next = fist;
+    markup.next = first;
   }
   this.children.unshift(markup);
 }
@@ -422,21 +422,23 @@ Element.prototype.visit = function() {
   domutils.visitNode(this, arguments[0], arguments[1], arguments[2]);
 }
 
-module.exports.Document = function(children) {
-  return new Document(children);
-};
-module.exports.CData = function(content) {
-  return new CData(content);
-};
-module.exports.Element = function(tagName, selfClosing, attributes) {
-  return new Element(tagName, attributes, selfClosing);
-};
-module.exports.Comment = function(content) {
-  return new Comment(content);
-};
-module.exports.Text = function(content) {
-  return new Text(content);
-};
-module.exports.DocType = function(content) {
-  return new DocType(content);
+export = {
+		Document : function(children) {
+	  return new Document(children);
+	},
+	CData : function(content) {
+	  return new CData(content);
+	},
+	Element : function(tagName, selfClosing, attributes) {
+	  return new Element(tagName, attributes, selfClosing);
+	},
+	Comment : function(content) {
+	  return new Comment(content);
+	},
+	Text : function(content) {
+	  return new Text(content);
+	},
+	DocType : function(content) {
+	  return new DocType(content);
+	}
 };

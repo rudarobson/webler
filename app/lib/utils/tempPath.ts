@@ -35,6 +35,6 @@ function TemporaryPath(temp) {
   }
 }
 
-module.exports = function(temp) {
+export = function(temp) {
   return new TemporaryPath(temp);
 }

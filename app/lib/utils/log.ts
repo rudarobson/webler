@@ -9,7 +9,7 @@ var indent = '';
 function formatMessage(message) {
   return indent + message.replace(/([\r\n]+)/g, indent + '$1');
 }
-module.exports = {
+export = {
   nl: function() {
     console.log('');
     return this;

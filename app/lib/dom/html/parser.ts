@@ -202,6 +202,6 @@ function Parser(opt) {
  * @param  {ParserOption}
  * @return {Document}
  */
-module.exports = function(opt) {
+export = function(opt) {
   return new Parser(opt);
 };

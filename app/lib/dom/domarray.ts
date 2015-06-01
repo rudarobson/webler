@@ -3,7 +3,7 @@ var cssSelectorParser = require('./css/parser');
 var htmlParser = require('./html/parser');
 var cssEngine = require('./css/engine');
 
-var $ = function (query, elts) {
+var $:any = function (query, elts) {
     if (query instanceof DomArray)
         return query;
 
@@ -23,7 +23,7 @@ var $ = function (query, elts) {
  * Similar to JQuery
  * @class
  */
-function DomArray(elts, /* internal only*/ filter) {
+function DomArray(elts, /* internal only*/ filter?) {
     if (!filter) {
         filter = {
             document: true,
@@ -282,10 +282,15 @@ DomArray.prototype.first = function () {
     }
 }
 
-module.exports = $;
 $.voidElements = [];
-module.exports.parse = function (html, opt) {
+
+$.parse = function (html, opt) {
     return htmlParser(opt).parse(html);
 }
 
-module.exports.markupTypes = mtypes;
+$.markupTypes = mtypes;
+
+export = $
+
+
+

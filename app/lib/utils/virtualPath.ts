@@ -38,6 +38,6 @@ function VirtualPath(vSrc, vDest) {
   }
 }
 
-module.exports = function(vSrc, vDest) {
+export = function(vSrc, vDest) {
   return new VirtualPath(vSrc, vDest);
 }

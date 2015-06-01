@@ -5,7 +5,7 @@
  * @prop {string} root - directory to listen for
  * @prop {boolean} openBrowser - open broser window
  */
-module.exports = {
+export = {
 
   /**
    * launch - launch a web server

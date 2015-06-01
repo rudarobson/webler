@@ -36,7 +36,7 @@ function Resource(src, dest) {
   }
 }
 
-module.exports = {
+export = {
   createResource: function(src, dest) {
     return new Resource(src, dest);
   },
