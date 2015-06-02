@@ -10,4 +10,7 @@ interface FileResource {
   src: () => string;
 
   dest: () => string;
+
+  addDependency: (file: string) => void;
+  getDependencies: () => { [id: string]: any };
 }

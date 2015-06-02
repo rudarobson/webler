@@ -6,6 +6,7 @@ var converters = require('./converters');
 function Resource(src, dest) {
   var _type = 'file';
   var _value = src;
+  var dependencies: { [id: string]: any } = {};
 
   this.set = function(type, value) {
     _type = type;
@@ -33,6 +34,16 @@ function Resource(src, dest) {
 
   this.dest = function() {
     return dest;
+  }
+
+  this.addDependency = function(file: string) {
+    dependencies[file] = {
+      creationDate: ''
+    };
+  }
+
+  this.getDependencies = function(): { [id: string]: any } {
+    return dependencies;
   }
 }
 

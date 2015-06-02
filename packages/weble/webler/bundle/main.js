@@ -84,7 +84,7 @@ function getRelativeOrAbsoluteReference(htmlDestDir, dest, wp) {
     }
     return ref.replace(/\\/g, '/');
 }
-function ScriptsBundle(wp, opt) {
+function ScriptsBundle(wp, opt, resource) {
     var markups = [];
     var files = [];
     this.addWithMarkup = function (markup) {
@@ -94,7 +94,7 @@ function ScriptsBundle(wp, opt) {
         files = files.concat(f);
         markups.push(markup);
     };
-    this.render = function (dest, htmlDestDir, isDebug, fdep) {
+    this.render = function (dest, htmlDestDir, isDebug) {
         dest = wp.vp.resolveDest(dest);
         var refs;
         if (isDebug) {
@@ -116,7 +116,7 @@ function ScriptsBundle(wp, opt) {
             markups[i].remove();
     };
 }
-function StylesBundle(wp, opt) {
+function StylesBundle(wp, opt, resource) {
     var files = [];
     var markups = [];
     this.addWithMarkup = function (markup) {
@@ -128,7 +128,7 @@ function StylesBundle(wp, opt) {
         files = files.concat(f);
         markups.push(markup);
     };
-    this.render = function (dest, htmlDestDir, isDebug, fdep) {
+    this.render = function (dest, htmlDestDir, isDebug) {
         dest = wp.vp.resolveDest(dest);
         for (var i in files) {
             if (isSass(files[i].type)) {
@@ -137,7 +137,7 @@ function StylesBundle(wp, opt) {
                     utils.mergeObjects(curOpt, opt.sass);
                 curOpt.file = wp.vp.resolveSrc(files[i].src);
                 curOpt.importer = function (url, prev, done) {
-                    fdep.add(prev);
+                    resource.addDependency(prev);
                 };
                 var sassRes = sass.renderSync(curOpt);
                 files[i].readFrom = wp.tp.write(sassRes.css, files[i].src);
@@ -166,7 +166,7 @@ function StylesBundle(wp, opt) {
             markups[i].remove();
     };
 }
-function ImgBundle(wp) {
+function ImgBundle(wp, resource) {
     var files = [];
     var markups = [];
     this.addWithMarkup = function (markup) {
@@ -175,14 +175,14 @@ function ImgBundle(wp) {
         var f = expandFiles(src, undefined, wp, null);
         files = files.concat(f);
     };
-    this.render = function (dest, htmlDestDir, isdebug, fdep) {
+    this.render = function (dest, htmlDestDir, isdebug) {
         dest = wp.vp.resolveDest(dest);
         justCopyFiles(files, wp, dest, path.extname(dest));
         for (var i in markups)
             markups[i].setAttribute('src', wp.vp.resolveDest(dest));
     };
 }
-function CopyBundle(wp) {
+function CopyBundle(wp, resource) {
     var files = [];
     var markups = [];
     this.addWithMarkup = function (markup) {
@@ -191,7 +191,7 @@ function CopyBundle(wp) {
         var f = expandFiles(src, undefined, wp, null);
         files = files.concat(f);
     };
-    this.render = function (dest, htmlDestDir, isdebug, fdep) {
+    this.render = function (dest, htmlDestDir, isdebug) {
         dest = wp.vp.resolveDest(dest);
         justCopyFiles(files, wp, dest, path.extname(dest));
         for (var i in markups)
@@ -200,12 +200,12 @@ function CopyBundle(wp) {
 }
 var alreadyRendered = {};
 var alreadyCopiedFiles = {};
-function renderBundles(bundles, htmlDestDir, isDebug, fdep) {
+function renderBundles(bundles, htmlDestDir, isDebug) {
     for (var i in bundles) {
-        bundles[i].bundle.render(bundles[i].dest, htmlDestDir, isDebug, fdep);
+        bundles[i].bundle.render(bundles[i].dest, htmlDestDir, isDebug);
     }
 }
-function createBundleFromElement(bundles, elt, wp, opt) {
+function createBundleFromElement(bundles, elt, wp, opt, resource) {
     var key;
     var type;
     var src;
@@ -218,7 +218,7 @@ function createBundleFromElement(bundles, elt, wp, opt) {
             key = 'scripts_' + dest;
             if (!bundles[key]) {
                 bundles[key] = {
-                    bundle: new ScriptsBundle(wp, opt.scripts),
+                    bundle: new ScriptsBundle(wp, opt.scripts, resource),
                     dest: dest
                 };
             }
@@ -231,7 +231,7 @@ function createBundleFromElement(bundles, elt, wp, opt) {
             key = 'img_' + dest;
             if (!bundles[key]) {
                 bundles[key] = {
-                    bundle: new ImgBundle(wp),
+                    bundle: new ImgBundle(wp, resource),
                     dest: dest
                 };
             }
@@ -244,7 +244,7 @@ function createBundleFromElement(bundles, elt, wp, opt) {
             key = 'copy_' + dest;
             if (!bundles[key]) {
                 bundles[key] = {
-                    bundle: new CopyBundle(wp),
+                    bundle: new CopyBundle(wp, resource),
                     dest: dest
                 };
             }
@@ -257,7 +257,7 @@ function createBundleFromElement(bundles, elt, wp, opt) {
             key = 'styles_' + dest;
             if (!bundles[key]) {
                 bundles[key] = {
-                    bundle: new StylesBundle(wp, opt.styles),
+                    bundle: new StylesBundle(wp, opt.styles, resource),
                     dest: dest
                 };
             }
@@ -268,8 +268,8 @@ function createBundleFromElement(bundles, elt, wp, opt) {
 }
 module.exports = {
     type: 'stream',
-    require: ['$', 'gOptions', 'wp', 'fdep'],
-    start: function (resource, options, $, gOptions, wp, fdep) {
+    require: ['$', 'gOptions', 'wp'],
+    start: function (resource, options, $, gOptions, wp) {
         var bundleIgnoreAttr = 'bundle-ignore';
         var opt = options;
         var isDebug = gOptions.debug || false;
@@ -290,14 +290,14 @@ module.exports = {
         var bundles = {};
         $dom.filter('script[bundle],script[src^="~"],link[bundle],link[href^="~"],img[bundle],img[src^="~"],bundle').each(function () {
             if (!this.hasAttribute(bundleIgnoreAttr)) {
-                createBundleFromElement(bundles, this, wp, opt);
+                createBundleFromElement(bundles, this, wp, opt, resource);
             }
             else {
                 this.removeAttribute(bundleIgnoreAttr);
             }
         });
         var htmlDestDir = path.dirname(wp.vp.resolveDest(resource.dest()));
-        renderBundles(bundles, htmlDestDir, isDebug, fdep);
+        renderBundles(bundles, htmlDestDir, isDebug);
         resource.set('dom', $dom[0]);
     },
     setup: function () {

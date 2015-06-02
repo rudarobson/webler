@@ -3,7 +3,7 @@ require('./bootstrap_global');
 var time = require('../../lib/utils/time');
 
 var fs = require('fs');
-var utils = _wRequire('utils');
+var utils: Utils = _wRequire('utils');
 var vpCreator = _wRequire('vp');
 var tpCreator = _wRequire('tp');
 var path = require('path');
@@ -12,7 +12,7 @@ var converters = _wRequire('converters');
 var system = _wRequire('system');
 var $ = wRequire('$');
 var package_manager = _wRequire('package_manager');
-var fdepCreator: { create: (p: string) => FileDependency, manager: (p: string) => FileDependecyManager } = _wRequire('fdep');
+
 
 interface Webled {
   unit: any;
@@ -40,8 +40,7 @@ var requireMap = {
   gOptions: true, //map to current options
   wp: true,
   pipedata: true,
-  $: $,
-  fdep: true
+  $: $
 };
 
 function convertFile(file, to) {
@@ -49,8 +48,33 @@ function convertFile(file, to) {
 }
 
 
+function persistDependencies(resources: FileResource[]) {
+  var deps = {};
 
-var fdepManager = fdepCreator.manager('.fdeps.json');
+  for (var i in resources) {
+    var resDep = resources[i].getDependencies();
+    for (var j in resDep) {
+      var d;
+      if (!deps[resources[i].src()])
+        deps[resources[i].src()] = {};
+      deps[resources[i].src()][j] = {
+        lastModified: 'last'
+      };
+
+    }
+
+    deps[resources[i].src()]
+  }
+
+  utils.safeWriteFile('.fdeps.json', JSON.stringify(deps));
+}
+
+var persistedDependencies = (function() {
+  var deps = {};
+  if (fs.existsSync('.fdeps.json'))
+    deps = JSON.parse(fs.readFileSync('.fdeps.json'));
+  return deps;
+})();
 
 /**
  * format is
@@ -103,7 +127,7 @@ function scopeCreator(di) {
     return deferred(modules[name][userName].module);
   }
 
-  function setupModuleRequirements(module, input, options, gOptions, wp, pipedata, /* FileDependency or FileDependecyCollection */ fdep: any) {
+  function setupModuleRequirements(module, input, options, gOptions, wp, pipedata) {
     var requirements = [];
     for (var i in module.require) {
       var name = module.require[i];
@@ -117,9 +141,6 @@ function scopeCreator(di) {
             break;
           case 'wp':
             requirements.push(wp);
-            break;
-          case 'fdep':
-            requirements.push(fdep);
             break;
         }
       } else {
@@ -163,12 +184,12 @@ function scopeCreator(di) {
           if (moduleType != 'stream') { //dot not process this pipeline but do evereything again for other files
             break;
           }
-          var fdep = fdepManager.get(resource.src());;
-          
+
+
           var moduleName = pipeline[j].name;
           var userName = pipeline[j].userName;
           var options = setupOptionsForModule(module, pipeline[j].options);
-          var moduleRequirements = setupModuleRequirements(module, resource, options, gOptions, wp, pipeContext, fdep);
+          var moduleRequirements = setupModuleRequirements(module, resource, options, gOptions, wp, pipeContext);
 
           log.resetIndentation().nl()
             .normal('Running ' + moduleName + (userName ? ' at ' + userName : '') + '...')
@@ -206,7 +227,7 @@ function scopeCreator(di) {
         var moduleName = pipeline[pipelineIndex].name;
         var userName = pipeline[pipelineIndex].userName;
         var options = setupOptionsForModule(module, pipeline[pipelineIndex].options);
-        var moduleRequirements = setupModuleRequirements(module, resources, options, gOptions, wp, pipeContext, fdepManager);
+        var moduleRequirements = setupModuleRequirements(module, resources, options, gOptions, wp, pipeContext);
 
         log.resetIndentation().nl()
           .normal('Running ' + moduleName + (userName ? ' at ' + userName : '') + '...')
@@ -268,7 +289,16 @@ function scopeCreator(di) {
         globs = [globs];
       }
 
-      var resources = di.fileSolver(globs, opt.src, opt.dest);
+      var resources: FileResource[] = di.fileSolver(globs, opt.src, opt.dest);
+
+      for (var i in resources) {
+        var res = resources[i];
+        var dep = persistedDependencies[res.src()];
+
+        if (dep)
+          res.addDependency(dep);
+      }
+
       var wp: any = {};
 
       wp.vp = vpCreator(opt.src, opt.dest)
@@ -409,6 +439,7 @@ function scopeCreator(di) {
       for (var w in toRender) {
         if (toRender[w].resources.length > 0) {
           renderWeble(toRender[w]);
+          persistDependencies(toRender[w].resources);
         } else {
           log.error('No files at this weble!');
         }
@@ -433,7 +464,7 @@ function scopeCreator(di) {
           }
         }
       }
-      fdepManager.persist();
+
       return this;
     },
     api: function(userName, name) {
