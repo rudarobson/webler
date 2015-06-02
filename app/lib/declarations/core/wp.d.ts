@@ -18,7 +18,7 @@ interface TPManager {
 
   dir: () => string;
 
-  write: (content: string, preferredName: string) => string;
+  write: (content: string, preferredName?: string) => string;
 
   generateName: () => string;
 

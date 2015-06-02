@@ -57,6 +57,8 @@ if (!global.wRequire) {
         return require(path.join(moduleInputBasePath, 'resource'));
       case 'package_manager':
         return require(path.join(corePath, 'package_manager'));
+      case 'fdep':
+        return require(path.join(corePath, 'FileDependency'));
       default:
         throw 'No internal webler module: ' + moduleName;
     }

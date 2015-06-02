@@ -37,10 +37,10 @@ function Resource(src, dest) {
 }
 
 export = {
-  createResource: function(src, dest) {
+  createResource: function(src, dest): FileResource {
     return new Resource(src, dest);
   },
-  addResourceType: function(type, handler) {
+  addResourceType: function(type, handler): void {
     converters.registerType(type, handler);
   }
 }

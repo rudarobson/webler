@@ -12,6 +12,15 @@ var converters = _wRequire('converters');
 var system = _wRequire('system');
 var $ = wRequire('$');
 var package_manager = _wRequire('package_manager');
+var fdepCreator: { create: (p: string) => FileDependency, manager: (p: string) => FileDependecyManager } = _wRequire('fdep');
+
+interface Webled {
+  unit: any;
+  pipeline: any[];
+  gOptions: any;
+  resources: FileResource[];
+  wp: WPManager;
+}
 
 var defaultWeblerOpts = {
   src: 'src', //use current working directory as app root
@@ -31,13 +40,17 @@ var requireMap = {
   gOptions: true, //map to current options
   wp: true,
   pipedata: true,
-  $: $
+  $: $,
+  fdep: true
 };
 
 function convertFile(file, to) {
   return converters.getConverter(file.type)[to](file.value)
 }
 
+
+
+var fdepManager = fdepCreator.manager('.fdeps.json');
 
 /**
  * format is
@@ -51,14 +64,14 @@ function scopeCreator(di) {
   /**
    * @type {Object[]} - { unit: weble,pipeline: pipelineOrder,gOptions: globalOptions,files: {src:virtualSrc,dest:virtualDest},wp: {tp:temporaryPathmanager,vp:virtualPathManager} }
    */
-  var webled = [];
+  var webled: Webled[] = [];
 
   var allDestFolders = {};
   var allTempFolders = {};
   var cleanTmp = true;
   var cleanUp = true;
-	
-  function solveModule(name:string, deferred,userName?:string) {
+
+  function solveModule(name: string, deferred, userName?: string) {
 
     if (!modules[name]) {
       log.error('module: ' + name + ' not loaded');
@@ -66,7 +79,7 @@ function scopeCreator(di) {
     }
 
     var count = 0;
-	var i:string;
+    var i: string;
     for (i in modules[name]) {
       count++;
       if (count > 1)
@@ -83,14 +96,14 @@ function scopeCreator(di) {
         }
       }
     } else {
-		if(!userName)
-			userName = i;
-	}
+      if (!userName)
+        userName = i;
+    }
 
     return deferred(modules[name][userName].module);
   }
 
-  function setupModuleRequirements(module, input, options, gOptions, wp, pipedata) {
+  function setupModuleRequirements(module, input, options, gOptions, wp, pipedata, /* FileDependency or FileDependecyCollection */ fdep: any) {
     var requirements = [];
     for (var i in module.require) {
       var name = module.require[i];
@@ -104,6 +117,9 @@ function scopeCreator(di) {
             break;
           case 'wp':
             requirements.push(wp);
+            break;
+          case 'fdep':
+            requirements.push(fdep);
             break;
         }
       } else {
@@ -127,7 +143,7 @@ function scopeCreator(di) {
   }
 
 
-  function processAllSequentialStream(pipelineStart, weble, pipeContext) {
+  function processAllSequentialStream(pipelineStart, weble: Webled, pipeContext) {
     var stopedAt = pipelineStart;
     var pipeline = weble.pipeline;
     var resources = weble.resources;
@@ -147,11 +163,12 @@ function scopeCreator(di) {
           if (moduleType != 'stream') { //dot not process this pipeline but do evereything again for other files
             break;
           }
-
+          var fdep = fdepManager.get(resource.src());;
+          
           var moduleName = pipeline[j].name;
           var userName = pipeline[j].userName;
           var options = setupOptionsForModule(module, pipeline[j].options);
-          var moduleRequirements = setupModuleRequirements(module, resource, options, gOptions, wp, pipeContext);
+          var moduleRequirements = setupModuleRequirements(module, resource, options, gOptions, wp, pipeContext, fdep);
 
           log.resetIndentation().nl()
             .normal('Running ' + moduleName + (userName ? ' at ' + userName : '') + '...')
@@ -174,11 +191,11 @@ function scopeCreator(di) {
     return stopedAt;
   }
 
-  function processAllSequentialBulks(pipelineIndex, weble, pipeContext) {
+  function processAllSequentialBulks(pipelineIndex, weble: Webled, pipeContext) {
     var pipeline = weble.pipeline;
     var resources = weble.resources;
     var wp = weble.wp;
-    var gOptions = wp.gOptions;
+    var gOptions = weble.gOptions;
 
     if (pipelineIndex < pipeline.length) { //pipeline ended, just ignore
       while (pipelineIndex < pipeline.length) {
@@ -189,7 +206,7 @@ function scopeCreator(di) {
         var moduleName = pipeline[pipelineIndex].name;
         var userName = pipeline[pipelineIndex].userName;
         var options = setupOptionsForModule(module, pipeline[pipelineIndex].options);
-        var moduleRequirements = setupModuleRequirements(module, resources, options, gOptions, wp, pipeContext);
+        var moduleRequirements = setupModuleRequirements(module, resources, options, gOptions, wp, pipeContext, fdepManager);
 
         log.resetIndentation().nl()
           .normal('Running ' + moduleName + (userName ? ' at ' + userName : '') + '...')
@@ -202,7 +219,7 @@ function scopeCreator(di) {
     return pipelineIndex;
   }
 
-  function renderWeble(weble) {
+  function renderWeble(weble: Webled) {
 
     var pipeline = weble.pipeline;
     var pipelineIndex = 0;
@@ -225,7 +242,7 @@ function scopeCreator(di) {
     /* [path],globs,options */
     weble: function(options) {
 
-      var opt:any = {};
+      var opt: any = {};
       var pipelineOrder = [];
       var weble = {};
       var globs;
@@ -252,7 +269,7 @@ function scopeCreator(di) {
       }
 
       var resources = di.fileSolver(globs, opt.src, opt.dest);
-      var wp:any = {};
+      var wp: any = {};
 
       wp.vp = vpCreator(opt.src, opt.dest)
 
@@ -266,8 +283,8 @@ function scopeCreator(di) {
       if (opt.temp)
         wp.tp = tpCreator(opt.temp);
 
-	  
-      function setupModuleInWebler(name:string) {
+
+      function setupModuleInWebler(name: string) {
         if (!weble[name]) {
           /* returns the weble to the user
            * or an object containing a function at(name)
@@ -310,14 +327,14 @@ function scopeCreator(di) {
     config: function(name, opt) {
       var self = this;
 
-      if (name && typeof(name) == typeof('')) {
+      if (name && typeof (name) == typeof ('')) {
         return solveModule(name, function(module) {
           if (!module.config) {
             log.error('module: ' + name + ' do not support config');
             system.exit(-1);
           }
 
-          var toOverride:any = module.config;
+          var toOverride: any = module.config;
           if (opt) {
             for (var i in opt)
               toOverride[i] = opt[i];
@@ -370,12 +387,12 @@ function scopeCreator(di) {
       return this;
     },
     render: function(unit) {
-      var toRender : any[];
-		var i:any;
-		var l:number;
+      var toRender: Webled[];
+      var i: any;
+      var l: number;
       if (unit) {
-        for ( i = 0,
-           l = webled.length; i < l; i++) {
+        for (i = 0,
+          l = webled.length; i < l; i++) {
           if (unit == webled[i].unit) {
             toRender = webled.splice(i, 1);
             break;
@@ -416,6 +433,7 @@ function scopeCreator(di) {
           }
         }
       }
+      fdepManager.persist();
       return this;
     },
     api: function(userName, name) {
@@ -423,9 +441,9 @@ function scopeCreator(di) {
         name = userName;
         userName = undefined;
       }
-      return solveModule( name, function(module) {
+      return solveModule(name, function(module) {
         return module.api;
-      },userName);
+      }, userName);
     },
     doNotCleanUp: function(module) {
       cleanUp = false;

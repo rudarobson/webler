@@ -40,7 +40,7 @@ function expandFiles(src, type, wp, defaultFileType) {
             srcs.push({
                 src: wsFiles[i].src,
                 readFrom: wsFiles[i].src,
-                type: srcs[i].type || type
+                type: wsFiles[i].type || type
             });
         }
     }
@@ -94,7 +94,7 @@ function ScriptsBundle(wp, opt) {
         files = files.concat(f);
         markups.push(markup);
     };
-    this.render = function (dest, htmlDestDir, isDebug) {
+    this.render = function (dest, htmlDestDir, isDebug, fdep) {
         dest = wp.vp.resolveDest(dest);
         var refs;
         if (isDebug) {
@@ -128,7 +128,7 @@ function StylesBundle(wp, opt) {
         files = files.concat(f);
         markups.push(markup);
     };
-    this.render = function (dest, htmlDestDir, isDebug) {
+    this.render = function (dest, htmlDestDir, isDebug, fdep) {
         dest = wp.vp.resolveDest(dest);
         for (var i in files) {
             if (isSass(files[i].type)) {
@@ -136,6 +136,9 @@ function StylesBundle(wp, opt) {
                 if (opt.sass)
                     utils.mergeObjects(curOpt, opt.sass);
                 curOpt.file = wp.vp.resolveSrc(files[i].src);
+                curOpt.importer = function (url, prev, done) {
+                    fdep.add(prev);
+                };
                 var sassRes = sass.renderSync(curOpt);
                 files[i].readFrom = wp.tp.write(sassRes.css, files[i].src);
             }
@@ -172,7 +175,7 @@ function ImgBundle(wp) {
         var f = expandFiles(src, undefined, wp, null);
         files = files.concat(f);
     };
-    this.render = function (dest) {
+    this.render = function (dest, htmlDestDir, isdebug, fdep) {
         dest = wp.vp.resolveDest(dest);
         justCopyFiles(files, wp, dest, path.extname(dest));
         for (var i in markups)
@@ -188,7 +191,7 @@ function CopyBundle(wp) {
         var f = expandFiles(src, undefined, wp, null);
         files = files.concat(f);
     };
-    this.render = function (dest) {
+    this.render = function (dest, htmlDestDir, isdebug, fdep) {
         dest = wp.vp.resolveDest(dest);
         justCopyFiles(files, wp, dest, path.extname(dest));
         for (var i in markups)
@@ -197,9 +200,9 @@ function CopyBundle(wp) {
 }
 var alreadyRendered = {};
 var alreadyCopiedFiles = {};
-function renderBundles(bundles, htmlDestDir, isDebug) {
+function renderBundles(bundles, htmlDestDir, isDebug, fdep) {
     for (var i in bundles) {
-        bundles[i].bundle.render(bundles[i].dest, htmlDestDir, isDebug);
+        bundles[i].bundle.render(bundles[i].dest, htmlDestDir, isDebug, fdep);
     }
 }
 function createBundleFromElement(bundles, elt, wp, opt) {
@@ -265,8 +268,8 @@ function createBundleFromElement(bundles, elt, wp, opt) {
 }
 module.exports = {
     type: 'stream',
-    require: ['$', 'gOptions', 'wp'],
-    start: function (resource, options, $, gOptions, wp) {
+    require: ['$', 'gOptions', 'wp', 'fdep'],
+    start: function (resource, options, $, gOptions, wp, fdep) {
         var bundleIgnoreAttr = 'bundle-ignore';
         var opt = options;
         var isDebug = gOptions.debug || false;
@@ -294,7 +297,7 @@ module.exports = {
             }
         });
         var htmlDestDir = path.dirname(wp.vp.resolveDest(resource.dest()));
-        renderBundles(bundles, htmlDestDir, isDebug);
+        renderBundles(bundles, htmlDestDir, isDebug, fdep);
         resource.set('dom', $dom[0]);
     },
     setup: function () {
