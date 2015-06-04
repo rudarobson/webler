@@ -1,6 +1,6 @@
 /** @namespace Dom */
 /** @module lib/dom/dom  */
-var mtypes = require('./markuptype');
+var mtypes: Dom.MarkupTypes = require('./markuptype');
 var cssEngine = require('./css/engine');
 var domutils = require('./domutils');
 
@@ -69,8 +69,8 @@ SerializableNode.prototype.serialize = function() {
         domutils.visitNode(this.children[i], function() {
           out += getMarkupStart(this);
         }, function() {
-          out += getMarkupEnd(this);
-        });
+            out += getMarkupEnd(this);
+          });
       }
       return out;
     case mtypes.element:
@@ -83,6 +83,42 @@ function Markup() {
 }
 
 Markup.prototype = new SerializableNode();
+
+/**
+ * Markup.prototype.cloneNode - clones the node
+ *
+ * @param  {boolean} deep copy children ?
+ * @return {Markup}      cloned node
+ */
+Markup.prototype.cloneNode = function(deep?: boolean) {
+
+  switch (this.type) {
+    case mtypes.element:
+      var attrs = {};
+      for (var i in this.attributes)
+        attrs[i] = this.attributes[i];
+
+      var elt: Dom.Element = new Element(this.tagName, attrs, this.selfClosing);
+      if (deep) {
+        for (var i in this.children)
+          elt.append(this.children[i].cloneNode(deep));
+      }
+
+      return elt;
+      break;
+    case mtypes.comment:
+      return new Comment(this.content);
+      break;
+    case mtypes.text:
+      return new Text(this.text);
+      break;
+    case mtypes.doctype:
+      return new DocType(this.content);
+      break;
+  }
+}
+
+
 
 Markup.prototype.remove = function() {
   return this.parent.removeChild(this);
@@ -345,7 +381,7 @@ Element.prototype.attr = function(name, value) {
     this.attributes[name] = value;
 
   } else {
-    if (typeof(name) == typeof(''))
+    if (typeof (name) == typeof (''))
       return this.attributes[name];
     else { //map passed to set attributes
       value = name;
@@ -408,8 +444,8 @@ Element.prototype.innerHTML = function() {
     domutils.visitNode(this.children[i], function() {
       out += getMarkupStart(this);
     }, function(elt) {
-      out += getMarkupEnd(this);
-    });
+        out += getMarkupEnd(this);
+      });
   }
   return out;
 }
@@ -423,22 +459,22 @@ Element.prototype.visit = function() {
 }
 
 export = {
-		Document : function(children) {
-	  return new Document(children);
-	},
-	CData : function(content) {
-	  return new CData(content);
-	},
-	Element : function(tagName, selfClosing, attributes) {
-	  return new Element(tagName, attributes, selfClosing);
-	},
-	Comment : function(content) {
-	  return new Comment(content);
-	},
-	Text : function(content) {
-	  return new Text(content);
-	},
-	DocType : function(content) {
-	  return new DocType(content);
-	}
+		Document: function(children) {
+    return new Document(children);
+  },
+  CData: function(content) {
+    return new CData(content);
+  },
+  Element: function(tagName, selfClosing, attributes) {
+    return new Element(tagName, attributes, selfClosing);
+  },
+  Comment: function(content) {
+    return new Comment(content);
+  },
+  Text: function(content) {
+    return new Text(content);
+  },
+  DocType: function(content) {
+    return new DocType(content);
+  }
 };

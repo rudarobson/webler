@@ -2,7 +2,7 @@ require('../lib/core/bootstrap_global');
 
 function weble(argv) {
   var config = argv._[0];
-
+  
   var webler = require('webler');
   var path = require('path');
 

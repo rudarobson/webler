@@ -7,4 +7,5 @@ tests/massive_tests/Simple App/development
 npm-debug.log
 tsconfig.json
 /lib
-packages/weble/webler
+packages/weble
+_references.js

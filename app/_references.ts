@@ -1,0 +1,11 @@
+/// <reference path="./lib/declarations/core/weblerscript.d.ts"/>
+/// <reference path="./lib/declarations/core/wp.d.ts"/>
+/// <reference path="./lib/dom/dom.d.ts"/>
+/// <reference path="./lib/dom/css/css.d.ts"/>
+/// <reference path="./lib/declarations/node.d.ts"/>
+/// <reference path="./lib/declarations/utils/utils.d.ts"/>
+/// <reference path="./lib/declarations/core/FileDependency.d.ts"/>
+/// <reference path="./lib/declarations/moduleInput/FileResource.d.ts"/>
+/// <reference path="./packages/weble/razor/razor.d.ts"/>
+/// <reference path="./packages/weble/bundle/bundle.d.ts"/>
+/// <reference path="./packages/weble/components/components.d.ts"/>

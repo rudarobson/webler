@@ -1,8 +1,7 @@
-var scopeCreator = require('./weblerScopeCreator');
-var solveGlobs = require('./fileSolver');
-
-
-
-export = scopeCreator({
-	fileSolver: solveGlobs
-});
+export = {
+	$:require('../dom/domArray'),
+	globule:require('globule'),
+	razor:require('../../packages/weble/razor/main'),
+	bundle:require('../../packages/weble/bundle/main'),
+	components:require('../../packages/weble/components/main')
+}
