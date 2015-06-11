@@ -69,7 +69,28 @@ function addSassImporter(cwd: string, bundler: Bundle.Bundler) {
   });
 }
 
+function addJavascriptImporter(srcCwd: string, bundler: Bundle.Bundler) {
+  bundler.addScriptsFileSolver('javascript', function(pattern): Bundle.FileMapResult[] {
+    var files = globule.find(pattern, {
+      cwd: srcCwd,
+      filter: 'isFile'
+    });
+
+    var res: Bundle.FileMapResult[] = [];
+    for (var i in files) {
+      res.push({
+        map: undefined,
+        result: Webler.wFile(srcCwd, files[i])
+      })
+    }
+    return res;
+  });
+}
+
 export = {
+  javascript: function(pattern: string[], cwd: string) {
+    addJavascriptImporter(cwd, bundler);
+  },
   css: function(pattern: string[], cwd: string) {
     addCssImporter(cwd, bundler);
   },
@@ -103,6 +124,7 @@ export = {
       cwd: cwd,
       filter: 'isFile'
     });
+
     var wFiles: Webler.WFile[] = [];
 
     for (var i in files) {

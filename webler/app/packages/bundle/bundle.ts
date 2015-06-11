@@ -192,23 +192,11 @@ export = <Bundle.Bundler> {
         switch (bundleType) {
           case 'styles':
             var bundled = new cleanCss().minify(toBundle);
-            wfs.safeWriteFile(path.join(destCwd,dest),bundled.styles);
+            wfs.safeWriteFile(path.join(destCwd, dest), bundled.styles);
             break;
           case 'scripts':
-            if (!options.isProduction) {
-
-            } else {
-
-            }
-
-            break;
-          case 'img':
-            if (!options.isProduction) {
-
-            } else {
-
-            }
-
+            var bundled = uglifyJs.minify(toBundle);
+            wfs.safeWriteFile(path.join(destCwd, dest), bundled.code);
             break;
         }
       }
