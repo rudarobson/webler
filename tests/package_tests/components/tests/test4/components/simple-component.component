@@ -1,8 +1,0 @@
-<div class="simple-component">
-	this is simple-component
-	<div>
-		<content select="h1"></content>
-		<content select="simple-component-internal"></content>
-		<content></content>
-	</div>
-</div>

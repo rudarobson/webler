@@ -1,1 +1,0 @@
-!function(){var n="index1";alert(n)}(),function(){var n="index2";alert(n)}();

@@ -1,8 +1,0 @@
-<div class="blah">
-	<h1>A fixed content3</h1>
-
-	<div>after this is inside content3</div>
-	<content></content>
-	<div>after this is not anymore inside content3</div>
-	<content select="h1"></content>
-</div>

@@ -1,4 +1,0 @@
-<div class="simple-component-internal">
-	this is simple-component-internal
-	<content select="h1"></content>
-</div>

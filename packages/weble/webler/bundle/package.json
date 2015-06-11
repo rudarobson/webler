@@ -1,9 +1,0 @@
-{
-  "name": "bundle",
-  "main": "main.js",
-  "dependencies": {
-    "clean-css": "^3.2.10",
-    "node-sass": "^3.1.2",
-    "uglify-js": "^2.4.23"
-  }
-}

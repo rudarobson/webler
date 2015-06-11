@@ -1,10 +1,7 @@
-**.webler_temp
-**.webler_tmp
+/core
+/packages
 node_modules
-tests/**/tests_results
-tests/massive_tests/Simple App/release
-tests/massive_tests/Simple App/development
-npm-debug.log
-tsconfig.json
-/lib
-packages/weble/webler
+/tmp
+/app
+/weble-task
+webler/tsconfig.json

@@ -1,33 +1,19 @@
 {
   "name": "webler",
-  "version": "0.0.1004",
   "description": "Web application assembler",
-  "keywords": [
-    "webler",
-    "web",
-    "tool",
-    "assembler",
-    "compiler",
-    "html",
-    "minifier",
-    "compressor"
-  ],
+  "version": "0.0.1005",
+  "main": "webler.js",
+  "dependencies": {
+    "clean-css": "^3.3.1",
+    "globule": "^0.2.0",
+    "grunt": "^0.4.5",
+    "mkdirp": "^0.5.1",
+    "node-sass": "^3.1.2",
+    "uglify-js": "^2.4.23"
+  },
+  "devDependencies": {},
+  "preferGlobal": true,
   "author": "Rudá Robson",
   "type": "Copyright 2015 Rudá Robson",
-  "main": "lib/core/webler.js",
-  "bin": {
-    "weble": "bin/weble",
-    "webler": "bin/webler"
-  },
-  "preferGlobal": true,
-  "dependencies": {
-    "colors": "^1.1.0",
-    "live-server": "^0.7.1",
-    "mkdirp": "^0.5.0",
-    "node-watch": "^0.3.4",
-    "yargs": "^3.7.2"
-  },
-  "devDependencies": {
-    "nodeunit": "^0.9.1"
-  }
+  "license": "Copyright 2015 Rudá Robson",
 }
