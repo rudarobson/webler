@@ -28,7 +28,7 @@ function DefaultImporter(importing: string, options: Components.ComponentsOption
     for (var i in files) {
       var pathWithoutExt = files[i].slice(0, -(componentExt.length)); //trim extension
       imports.push({
-        name: alias || path.basename(pathWithoutExt),
+        name: path.basename(pathWithoutExt),
         path: path.join(dir, files[i])
       })
     }
