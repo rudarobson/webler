@@ -40,7 +40,7 @@ function createTag(html, voidElements) {
     return dom.CData(html);
   } else { //Element
     var attrs = {};
-    var match = /<([^\s]+)(.*?)(?:\/[\s]*)?>/.exec(html);
+    var match = /<([^\s]+)([\s\S]*?)(?:\/[\s]*)?>/.exec(html);
     if (match[2]) {
       attrs = parseAttributes(match[2]);
     }

@@ -78,6 +78,26 @@ var modules = {
     razor: wPackage('razor'),
     components: wPackage('components'),
     bundle: bundler,
+    copy: {
+        start: function (config) {
+            var $ = wRequire('$');
+            for (var i in config.files) {
+                var dom = $.parse(fs.readFileSync(config.files[i].fullPath()).toString());
+                var comments = $.findComments(dom);
+                var regex = /<!--\s*copy:\s*([\S]+)\s*([\S]+)?-->/;
+                comments.each(function () {
+                    var match = regex.exec(this.content);
+                    if (match) {
+                        var from = match[1];
+                        var to = match[2] || from;
+                        wfs.safeWriteFile(path.join(config.destCwd, to), fs.readFileSync(path.join(config.glob.cwd, from)));
+                        config.additionalFiles.push(Webler.wFile(config.destCwd, to));
+                    }
+                    this.remove();
+                });
+            }
+        }
+    },
     javascript: {
         start: function (config) {
             addJavascriptImporter(config.glob.cwd, bundler);
@@ -93,6 +113,7 @@ var modules = {
             var files = config.glob.src;
             var cwd = config.glob.cwd;
             var destCwd = config.glob.dest;
+            var options = config.options;
             var sass = require('node-sass');
             addSassImporter(destCwd, bundler);
             var allF = globule.find(files, {
@@ -101,11 +122,13 @@ var modules = {
             });
             for (var i in allF) {
                 var file = allF[i];
-                var render = sass.renderSync({
-                    file: path.join(cwd, file),
-                    outFile: path.join(destCwd, file),
-                    sourceMap: true
-                });
+                var opt = {}; //need to copy multiple times
+                for (var i in options)
+                    opt[i] = options[i];
+                opt.file = path.join(cwd, file);
+                opt.outFile = path.join(destCwd, file);
+                opt.sourceMap = true;
+                var render = sass.renderSync(opt);
                 var destFile = path.join(destCwd, file).replace('.scss', '.css');
                 wfs.safeWriteFile(path.join(destCwd, file), fs.readFileSync(path.join(cwd, file))); //copy source file
                 wfs.safeWriteFile(destFile, render.css);
@@ -154,6 +177,7 @@ module.exports = {
             }
             var lastTempFolder;
             var foldersToDelete = [];
+            var additionalFiles = [];
             for (var j in module.packages) {
                 var packageOptions = module.packages[j];
                 var moduleName = j;
@@ -163,6 +187,7 @@ module.exports = {
                 lastTempFolder = folder;
                 modules[moduleName].start({
                     files: wFiles,
+                    additionalFiles: additionalFiles,
                     glob: {
                         src: module.srcs,
                         cwd: module.cwd,
@@ -173,12 +198,11 @@ module.exports = {
                     options: packageOptions
                 });
             }
-            allF = globule.find('**/*.*', {
-                cwd: lastTempFolder,
-                filter: 'isFile'
-            });
-            for (var k in allF) {
-                wfs.safeWriteFile(path.join(module.destCwd, allF[k]), fs.readFileSync(path.join(lastTempFolder, allF[k])));
+            for (var k in wFiles) {
+                wfs.safeWriteFile(path.join(module.destCwd, wFiles[k].src()), fs.readFileSync(wFiles[k].fullPath()));
+            }
+            for (var k in additionalFiles) {
+                wfs.safeWriteFile(path.join(module.destCwd, additionalFiles[k].src()), fs.readFileSync(additionalFiles[k].fullPath()));
             }
         }
     }

@@ -154,29 +154,43 @@ export = <Bundle.Bundler> {
           var res: Bundle.FileMapResult[] = typeFileSolvers[bundleType][type](child.getAttribute(srcAttribute));
 
           if (!gOptions.production) {
+
             for (var k in res) {
               var file = res[k];
 
               var newElt = <Dom.Element>(<Dom.Markup>child).cloneNode();
+
               var relativePath = path.relative(path.dirname(srcFile.src()), file.result.src());
 
-              setAttrs[srcAttribute] = relativePath;
+              setAttrs[srcAttribute] = relativePath.replace(/\\/g, '/');
               for (var o in setAttrs)
                 newElt.setAttribute(o, setAttrs[o]);
 
               comments[i].open.insertBefore(newElt);
+              config.additionalFiles.push(file.result)
+
               //wfs.safeWriteFile(path.join(destCwd, file.result.src()), fs.readFileSync(file.result.fullPath()).toString());
 
               if (file.map) {
                 var smap = sourcemap.getMap(file.map.fullPath());
-                var mapBasePath = path.join(destCwd, path.dirname(srcFile.src()));
-                for (var i in smap.sources) {
-                  var srcPath = path.join(path.relative('./', path.dirname(file.map.fullPath()), smap.sources[i]), path.basename(smap.sources[i]));
-                  wfs.safeWriteFile(path.join(mapBasePath, path.basename(smap.sources[i])), fs.readFileSync(srcPath).toString());
-                }
-                sourcemap.flattenSources(smap, mapBasePath);
 
-                wfs.safeWriteFile(path.join(mapBasePath, path.basename(file.map.src())), JSON.stringify(smap));
+                var resultBasePath = path.dirname(file.result.src());
+
+                for (var z in smap.sources) {
+                  var srcPath = path.dirname(file.map.fullPath());
+                  srcPath = path.resolve(srcPath, smap.sources[z]);
+                  srcPath = path.relative('./', srcPath);
+
+                  var srcFileName = path.basename(smap.sources[z]);
+
+                  wfs.safeWriteFile(path.join(destCwd, resultBasePath, srcFileName), fs.readFileSync(srcPath).toString());
+                  config.additionalFiles.push(Webler.wFile(destCwd, path.join(resultBasePath, srcFileName)));
+
+                }
+                sourcemap.flattenSources(smap, resultBasePath);
+                var destMapFile = path.basename(file.map.src());
+                wfs.safeWriteFile(path.join(destCwd, resultBasePath, destMapFile), JSON.stringify(smap));
+                config.additionalFiles.push(Webler.wFile(destCwd, path.join(resultBasePath, destMapFile)));
               }
             }
           } else {
@@ -188,7 +202,7 @@ export = <Bundle.Bundler> {
 
         if (gOptions.production && firstElementChild) {
           var newElt = <Dom.Element>(<Dom.Markup>firstElementChild).cloneNode();
-          setAttrs[srcAttribute] = path.relative(path.dirname(srcFile.src()), dest);
+          setAttrs[srcAttribute] = path.relative(path.dirname(srcFile.src()), dest).replace(/\\/g, '/');;
 
           for (var k in setAttrs)
             newElt.setAttribute(k, setAttrs[k]);
@@ -206,10 +220,12 @@ export = <Bundle.Bundler> {
             case 'styles':
               var bundled = new cleanCss().minify(concatFiles(toBundle));
               wfs.safeWriteFile(path.join(destCwd, dest), bundled.styles);
+              config.additionalFiles.push(Webler.wFile(destCwd, dest));
               break;
             case 'scripts':
               var bundled = uglifyJs.minify(toBundle);
               wfs.safeWriteFile(path.join(destCwd, dest), bundled.code);
+              config.additionalFiles.push(Webler.wFile(destCwd, dest));
               break;
           }
         }
@@ -230,6 +246,7 @@ export = <Bundle.Bundler> {
       });
 
       wfs.safeWriteFile(path.join(destCwd, srcFile.src()), dom.serialize());
+      srcFile.setCWD(destCwd);
     });
   }
 };

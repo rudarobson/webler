@@ -7,6 +7,7 @@ declare module Webler {
 
   interface WeblePackageOptions {
     files: Webler.WFile[];
+    additionalFiles:Webler.WFile[];
     destCwd: string;
     options: any;
     gOptions: GOptions;

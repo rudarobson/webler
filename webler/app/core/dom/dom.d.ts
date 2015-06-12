@@ -66,6 +66,7 @@ declare module Dom {
 
     parse: (html: string, opt?: any) => Document;
     findBlockComments: (document: Dom.Document, open: string, close?: string) => BlockComment[];
+    findComments: (document: Dom.Document) => Dom.Comment[];
     markupTypes: MarkupTypes;
   }
 }

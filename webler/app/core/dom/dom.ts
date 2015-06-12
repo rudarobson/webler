@@ -98,7 +98,8 @@ Markup.prototype.cloneNode = function(deep?: boolean) {
       for (var i in this.attributes)
         attrs[i] = this.attributes[i];
 
-      var elt: Dom.Element = new Element(this.tagName, attrs, this.selfClosing);
+      var elt: Dom.Element = new Element(this.tagName, attrs, this.isSelfClosing);
+
       if (deep) {
         for (var i in this.children)
           elt.append(this.children[i].cloneNode(deep));
@@ -332,20 +333,6 @@ function Element(tagName, attributes, selfClosing) {
   var children = [];
 
   this.children = [];
-  /*function(query) {
-      if (!query)
-        return children;
-      else {
-        var filter = [];
-        for (var i in children) {
-          if (children[i].is(query)) {
-            filter.push(children[i]);
-          }
-        }
-
-        return filter;
-      }
-    }*/
 }
 
 Element.prototype = new Markup();

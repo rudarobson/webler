@@ -291,7 +291,18 @@ $.parse = function(html, opt) {
 
 $.findBlockComments = function(dom: Dom.Document, open: string, close?: string) {
   return domutils.findCommentBlocks(dom, open, close);
+};
 
+$.findComments = function(dom: Dom.Document) {
+  var elts = [];
+
+  dom.visit(function() {
+    if (this.type == mtypes.comment) {
+      elts.push(this);
+    }
+  });
+
+  return new DomArray(elts, { all: true });
 };
 
 $.markupTypes = mtypes;

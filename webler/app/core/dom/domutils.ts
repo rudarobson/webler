@@ -85,7 +85,7 @@ function findBlockComments(elt, name, close): Dom.BlockComment[] {
       var c = findBlockComments(elt.children[i], name, close);
       comments = comments.concat(c);
       if (elt.children[i].type == mtype.comment && regex.test((<Dom.Comment> elt.children[i]).content)) {
-        i += c.length + 1;//skips siblings plus close tag, open tag will beskipped at loop iteration
+        i += c.length + 1;//skips siblings plus close tag, open tag will be skipped at loop iteration
       }//else it's a match in the children of the current child
     }
   }

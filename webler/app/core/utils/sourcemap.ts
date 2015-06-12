@@ -10,7 +10,7 @@ export = <Webler.SourceMap>{
     for (var i in map.sources) {
       map.sources[i] = path.basename(map.sources[i]);
     }
-    map.sourceRoot = 'dir';
+    map.sourceRoot = dir;
 
     return map;
   }
