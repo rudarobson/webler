@@ -12,11 +12,11 @@ function weble(opt: Webler.CommandLine.WebleOptions) {
     console.log('webler config file not found');
 }
 
-function server(opt: Webler.CommandLine.ServerOptions) {
-  require('../app/core/server/launch-server').launch(opt);
+function watch(argv) {
+  require('./watch')(argv);
 }
 
 export = {
   weble: weble,
-  server:server
+  watch: watch
 }

@@ -16,11 +16,8 @@ var command = argv._[0];
 var launcher = require('./launcher');
 
 switch (command) {
-  case 'server':
-    var dir = argv._[1];
-    delete argv._;
-    argv.root = dir;
-    launcher.server(argv);
+  case 'watch':
+    launcher.watch(argv);
     break;
   case 'weble':
     launcher.weble(argv);

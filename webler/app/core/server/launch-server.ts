@@ -21,7 +21,7 @@ export = {
       root: p.root, // Set root directory that's being server. Defaults to cwd.
       open: p.open || false // When false, it won't load your browser by default.
     };
-    console.log(p);
+    
     liveServer.start(params);
   }
 
