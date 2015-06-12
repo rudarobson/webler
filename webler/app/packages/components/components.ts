@@ -15,7 +15,6 @@ function DefaultImporter(importing: string, options: Components.ComponentsOption
 
 
   try {
-    console.log(dir)
     isDirectory = fs.lstatSync(dir).isDirectory();
   } catch (e) {
 
