@@ -10,7 +10,14 @@ var sourcemap = <Webler.SourceMap> wRequire('sourcemap');
 function generateProductionFileName() {
   return (Math.random() * 100000).toString();
 }
+function concatFiles(toConcat: string[]) {
+  var str = '';
+  for (var i in toConcat) {
+    str += fs.readFileSync(toConcat[i]).toString();
+  }
 
+  return str;
+}
 
 interface BundleMap {
   [type: string]:
@@ -68,154 +75,161 @@ export = <Bundle.Bundler> {
 
     typeFileSolvers.styles[type] = handler;
   },
-  start: function(srcFile: Webler.WFile, destCwd: string, options: Bundle.Config) {
-    var dom: Dom.Document = $.parse(fs.readFileSync(srcFile.fullPath()).toString());
+  start: function(config: Webler.WeblePackageOptions) {
+    var srcsFiles: Webler.WFile[] = config.files;
+    var destCwd: string = config.destCwd;
+    var options: Bundle.Config = config.options;
+    var gOptions: Webler.GOptions = config.gOptions;
 
-    var comments = $.findBlockComments(dom, 'bundle:', '/bundle');
-    var regex = /<!--\s*bundle:\s*([\s\S]+)-->/;
-    var bundles: BundleMap = {
-      styles: {},
-      scripts: {},
-      img: {}
-    };
+    srcsFiles.forEach(function(srcFile) {
+      var dom: Dom.Document = $.parse(fs.readFileSync(srcFile.fullPath()).toString());
 
-    for (var i in comments) {
+      var comments = $.findBlockComments(dom, 'bundle:', '/bundle');
+      var regex = /<!--\s*bundle:\s*([\s\S]+)-->/;
+      var bundles: BundleMap = {
+        styles: {},
+        scripts: {},
+        img: {}
+      };
 
-      var match = regex.exec(comments[i].open.content);
+      for (var i in comments) {
 
-      var srcAttribute;
-      var type;
-      var bundleType;
-      var setAttrs = <any> {};
-      var fileExt;
-      var dest = match[1];
+        var match = regex.exec(comments[i].open.content);
 
-      var allFiles: Bundle.FileMapResult[][] = [];
-      var commonTagName = undefined;
-      var firstElementChild: Dom.Element;
+        var srcAttribute;
+        var type;
+        var bundleType;
+        var setAttrs = <any> {};
+        var fileExt;
+        var dest = match[1];
 
-      for (var j in comments[i].children) {
+        var allFiles: Bundle.FileMapResult[][] = [];
+        var commonTagName = undefined;
+        var firstElementChild: Dom.Element;
 
-        var child = <any>comments[i].children[j];
+        for (var j in comments[i].children) {
 
-        if (child.type != $.markupTypes.element) {
-          child.remove();
-          continue;
-        }
+          var child = <any>comments[i].children[j];
 
-        if (!firstElementChild)
-          firstElementChild = child;
-
-        if (!commonTagName) {
-          commonTagName = child.tagName;
-
-          switch (child.tagName) {
-            case 'link':
-              bundleType = 'styles';
-              srcAttribute = 'href';
-              setAttrs.type = 'text/css';
-              setAttrs.rel = 'stylesheet';
-              fileExt = '.css';
-              break;
-            case 'script':
-              bundleType = 'scripts';
-              srcAttribute = 'src';
-              setAttrs.type = 'text/javascript';
-              fileExt = '.js';
-              break;
+          if (child.type != $.markupTypes.element) {
+            child.remove();
+            continue;
           }
 
-        } else if (child.tagName != commonTagName) {
-          console.log('file: ' + srcFile);
-          console.log('Mixing types on bundle ' + child.serialize());
-          process.exit(-1);
-        }
+          if (!firstElementChild)
+            firstElementChild = child;
 
-        type = child.getAttribute('type');
-        type = type.replace('text/', '');//sass or css
-        if (!typeFileSolvers[bundleType][type]) {
-          console.log('File Solver not found for ' + type);
-          process.exit(-1);
-        }
+          if (!commonTagName) {
+            commonTagName = child.tagName;
 
-        var res: Bundle.FileMapResult[] = typeFileSolvers[bundleType][type](child.getAttribute(srcAttribute));
+            switch (child.tagName) {
+              case 'link':
+                bundleType = 'styles';
+                srcAttribute = 'href';
+                setAttrs.type = 'text/css';
+                setAttrs.rel = 'stylesheet';
+                fileExt = '.css';
+                break;
+              case 'script':
+                bundleType = 'scripts';
+                srcAttribute = 'src';
+                setAttrs.type = 'text/javascript';
+                fileExt = '.js';
+                break;
+            }
 
-        if (!options.isProduction) {
-          for (var k in res) {
-            var file = res[k];
+          } else if (child.tagName != commonTagName) {
+            console.log('file: ' + srcFile);
+            console.log('Mixing types on bundle ' + child.serialize());
+            process.exit(-1);
+          }
 
-            var newElt = <Dom.Element>(<Dom.Markup>child).cloneNode();
-            var relativePath = path.relative(srcFile.src(), file.result.src());
+          type = child.getAttribute('type');
+          type = type.replace('text/', '');//sass or css
+          if (!typeFileSolvers[bundleType][type]) {
+            console.log('File Solver not found for ' + type);
+            process.exit(-1);
+          }
 
-            setAttrs[srcAttribute] = relativePath;
-            for (var o in setAttrs)
-              newElt.setAttribute(o, setAttrs[o]);
+          var res: Bundle.FileMapResult[] = typeFileSolvers[bundleType][type](child.getAttribute(srcAttribute));
 
-            comments[i].open.insertBefore(newElt);
-            wfs.safeWriteFile(path.join(destCwd, file.result.src()), fs.readFileSync(file.result.fullPath()).toString());
+          if (!gOptions.production) {
+            for (var k in res) {
+              var file = res[k];
 
-            if (file.map) {
-              var smap = sourcemap.getMap(file.map.fullPath());
-              var mapBasePath = path.join(destCwd, path.dirname(srcFile.src()));
-              for (var i in smap.sources) {
-                var srcPath = path.join(path.relative('./', path.dirname(file.map.fullPath()), smap.sources[i]), path.basename(smap.sources[i]));
-                wfs.safeWriteFile(path.join(mapBasePath, path.basename(smap.sources[i])), fs.readFileSync(srcPath).toString());
+              var newElt = <Dom.Element>(<Dom.Markup>child).cloneNode();
+              var relativePath = path.relative(path.dirname(srcFile.src()), file.result.src());
+
+              setAttrs[srcAttribute] = relativePath;
+              for (var o in setAttrs)
+                newElt.setAttribute(o, setAttrs[o]);
+
+              comments[i].open.insertBefore(newElt);
+              //wfs.safeWriteFile(path.join(destCwd, file.result.src()), fs.readFileSync(file.result.fullPath()).toString());
+
+              if (file.map) {
+                var smap = sourcemap.getMap(file.map.fullPath());
+                var mapBasePath = path.join(destCwd, path.dirname(srcFile.src()));
+                for (var i in smap.sources) {
+                  var srcPath = path.join(path.relative('./', path.dirname(file.map.fullPath()), smap.sources[i]), path.basename(smap.sources[i]));
+                  wfs.safeWriteFile(path.join(mapBasePath, path.basename(smap.sources[i])), fs.readFileSync(srcPath).toString());
+                }
+                sourcemap.flattenSources(smap, mapBasePath);
+
+                wfs.safeWriteFile(path.join(mapBasePath, path.basename(file.map.src())), JSON.stringify(smap));
               }
-              sourcemap.flattenSources(smap, mapBasePath);
+            }
+          } else {
+            allFiles.push(res);
+          }
 
-              wfs.safeWriteFile(path.join(mapBasePath, path.basename(file.map.src())), JSON.stringify(smap));
+          child.remove();
+        }
+
+        if (gOptions.production && firstElementChild) {
+          var newElt = <Dom.Element>(<Dom.Markup>firstElementChild).cloneNode();
+          setAttrs[srcAttribute] = path.relative(path.dirname(srcFile.src()), dest);
+
+          for (var k in setAttrs)
+            newElt.setAttribute(k, setAttrs[k]);
+
+          comments[i].open.insertBefore(newElt);
+
+          var toBundle = [];
+          for (var k in allFiles) {
+            for (var l in allFiles[k]) {
+              toBundle.push(allFiles[k][l].result.fullPath());
             }
           }
-        } else {
-          allFiles.push(res);
-        }
 
-        child.remove();
-      }
-
-      if (options.isProduction && firstElementChild) {
-        var newElt = <Dom.Element>(<Dom.Markup>firstElementChild).cloneNode();
-        setAttrs[srcAttribute] = path.relative(srcFile.src(), dest);
-
-        for (var k in setAttrs)
-          newElt.setAttribute(k, setAttrs[k]);
-
-        comments[i].open.insertBefore(newElt);
-
-        var toBundle = [];
-        for (var k in allFiles) {
-          for (var l in allFiles[k]) {
-            toBundle.push(allFiles[k][l].result.fullPath());
+          switch (bundleType) {
+            case 'styles':
+              var bundled = new cleanCss().minify(concatFiles(toBundle));
+              wfs.safeWriteFile(path.join(destCwd, dest), bundled.styles);
+              break;
+            case 'scripts':
+              var bundled = uglifyJs.minify(toBundle);
+              wfs.safeWriteFile(path.join(destCwd, dest), bundled.code);
+              break;
           }
         }
 
-        switch (bundleType) {
-          case 'styles':
-            var bundled = new cleanCss().minify(toBundle);
-            wfs.safeWriteFile(path.join(destCwd, dest), bundled.styles);
-            break;
-          case 'scripts':
-            var bundled = uglifyJs.minify(toBundle);
-            wfs.safeWriteFile(path.join(destCwd, dest), bundled.code);
-            break;
-        }
+        comments[i].open.remove();
+        comments[i].close.remove();
       }
 
-      comments[i].open.remove();
-      comments[i].close.remove();
-    }
 
+      //imags do not need comments
+      $(dom).filter('img').each(function() {
+        var filesResult = typeFileSolvers.img['img']([this.getAttribute('src')]);
 
-    //imags do not need comments
-    $(dom).filter('img').each(function() {
-      var filesResult = typeFileSolvers.img['img']([this.getAttribute('src')]);
+        wfs.safeWriteFile(
+          path.join(destCwd, this.getAttribute('src')),
+          fs.readFileSync(filesResult[0].result.fullPath())
+          );
+      });
 
-      wfs.safeWriteFile(
-        path.join(destCwd, this.getAttribute('src')),
-        fs.readFileSync(filesResult[0].result.fullPath())
-        );
+      wfs.safeWriteFile(path.join(destCwd, srcFile.src()), dom.serialize());
     });
-
-    wfs.safeWriteFile(path.join(destCwd, srcFile.src()), dom.serialize());
   }
 };

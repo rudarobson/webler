@@ -6,7 +6,7 @@ declare module Bundle {
   interface Bundler {
     addScriptsFileSolver: (type: string, handler: Bundle.FileHandler) => void;
     addStylesFileSolver: (type: string, handler: Bundle.FileHandler) => void;
-    start: (srcFile: Webler.WFile,destCwd:string, options: Config) => void;
+    start: (config:Webler.WeblePackageOptions) => void;
   }
 
   interface FileMapResult {

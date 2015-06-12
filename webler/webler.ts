@@ -10,7 +10,6 @@ interface Webled {
 }
 
 var webled: Webled[] = [];
-var bundler = wPackage('bundle');
 
 function deleteFolder(folder) {
   var files = [];
@@ -87,70 +86,140 @@ function addJavascriptImporter(srcCwd: string, bundler: Bundle.Bundler) {
   });
 }
 
-export = {
-  javascript: function(pattern: string[], cwd: string) {
-    addJavascriptImporter(cwd, bundler);
-  },
-  css: function(pattern: string[], cwd: string) {
-    addCssImporter(cwd, bundler);
-  },
-  sass: function(pattern: string[], cwd: string, destCwd: string) {
-    var sass = require('node-sass');
-    addSassImporter(destCwd, bundler);
+var defaultGOptions: Webler.GOptions = {
+  tmpDir: '.webler',
+  production: false,
+  ignoreFiles: []
+}
 
-    var files = globule.find(pattern, {
-      cwd: cwd,
-      filter: 'isFile'
-    });
+var bundler = wPackage('bundle');
 
-    for (var i in files) {
-      var file = files[i];
-      var render = sass.renderSync({
-        file: path.join(cwd, file),
-        outFile: path.join(destCwd, file),
-        sourceMap: true
-      });
-
-      var destFile = path.join(destCwd, file).replace('.scss', '.css');
-      wfs.safeWriteFile(path.join(destCwd, file), fs.readFileSync(path.join(cwd, file)));//copy source file
-      wfs.safeWriteFile(destFile, render.css);
-      wfs.safeWriteFile(destFile + '.map', render.map);
+var modules = {
+  razor: wPackage('razor'),
+  components: wPackage('components'),
+  bundle: bundler,
+  javascript: {
+    start: function(config: Webler.WeblePackageOptions) {
+      addJavascriptImporter(config.glob.cwd, bundler);
     }
   },
-  html: function(pattern: string[], cwd: string, destCwd: string, tmpDir: string = '.tmp', isProduction: boolean = false) {
-    var weble: Webled = <any>{};
-
-    var files = globule.find(pattern, {
-      cwd: cwd,
-      filter: 'isFile'
-    });
-
-    var wFiles: Webler.WFile[] = [];
-
-    for (var i in files) {
-      wFiles.push(Webler.wFile(cwd, files[i]));
+  css: {
+    start: function(config: Webler.WeblePackageOptions) {
+      addCssImporter(config.glob.cwd, bundler);
     }
+  },
+  sass: {
+    start: function(config: Webler.WeblePackageOptions) {
+      var files = config.glob.src;
+      var cwd = config.glob.cwd;
+      var destCwd = config.glob.dest;
 
-    wPackage('razor').start(wFiles, path.join(tmpDir, 'razor'), {
-      appSrcRoot: cwd,
-      tmpDir: tmpDir
-    });
+      var sass = require('node-sass');
+      addSassImporter(destCwd, bundler);
 
-    for (var i in wFiles) {
-      wPackage('components').start(wFiles[i], path.join(tmpDir, 'components'), {
-        componentsPath: path.join(cwd, '_webler/components')
+      var allF = globule.find(files, {
+        cwd: cwd,
+        filter: 'isFile'
       });
+
+      for (var i in allF) {
+        var file = allF[i];
+        var render = sass.renderSync({
+          file: path.join(cwd, file),
+          outFile: path.join(destCwd, file),
+          sourceMap: true
+        });
+
+        var destFile = path.join(destCwd, file).replace('.scss', '.css');
+        wfs.safeWriteFile(path.join(destCwd, file), fs.readFileSync(path.join(cwd, file)));//copy source file
+        wfs.safeWriteFile(destFile, render.css);
+        wfs.safeWriteFile(destFile + '.map', render.map);
+      }
     }
-
-    deleteFolder(path.join(tmpDir, 'razor'));
-
-    for (var i in wFiles) {
-      bundler.start(wFiles[i], destCwd, {
-        isProduction: isProduction
-      });
-    }
-
-    deleteFolder(path.join(tmpDir, 'components'));
   }
+}
+var tmpDeleted = false;
+export = {
+  weble: function(config: Webler.WebleOptions) {
 
+    var gOptions: Webler.GOptions = <any>{};
+
+    for (var i in defaultGOptions)
+      gOptions[i] = defaultGOptions[i];
+    for (var i in config.options)
+      gOptions[i] = config.options[i];
+
+    if (!tmpDeleted) {
+      tmpDeleted = true;
+      deleteFolder(gOptions.tmpDir);
+    }
+
+    for (var m in config.modules) {
+
+      var module = config.modules[m];
+
+      if (!module.cwd)
+        module.cwd = './';
+
+      if (!module.destCwd) {
+        console.log('destCwd not specified for module: ' + m)
+        process.exit(-1);
+        throw '';
+      }
+      var globs = [];
+      if (Array.isArray(module.srcs)) {
+        for (var i in module.srcs)
+          globs.push(module.srcs[i]);
+      } else
+        globs.push(module.srcs);
+
+      for (var i in gOptions.ignoreFiles)
+        globs.push('!' + gOptions.ignoreFiles[i]);
+
+      var allF = globule.find(globs, {
+        cwd: module.cwd,
+        filter: 'isFile'
+      });
+
+      var wFiles: Webler.WFile[] = [];
+
+      for (var f in allF) {
+        wFiles.push(Webler.wFile(module.cwd, allF[f]));
+      }
+
+      var lastTempFolder;
+      var foldersToDelete = [];
+      for (var j in module.packages) {
+        var packageOptions = module.packages[j];
+        var moduleName = j;
+
+
+        console.log('Running ' + moduleName + '...');
+        var folder = path.join(gOptions.tmpDir, j);
+        foldersToDelete.push(folder);
+        lastTempFolder = folder;
+
+        modules[moduleName].start({
+          files: wFiles,
+          glob: {
+            src: module.srcs,
+            cwd: module.cwd,
+            dest: module.destCwd
+          },
+          destCwd: folder,
+          gOptions: gOptions,
+          options: packageOptions
+        });
+      }
+
+      allF = globule.find('**/*.*', {
+        cwd: lastTempFolder,
+        filter: 'isFile'
+      });
+
+      for (var k in allF) {
+        wfs.safeWriteFile(path.join(module.destCwd, allF[k]), fs.readFileSync(path.join(lastTempFolder, allF[k])));
+      }
+    }
+  }
 }

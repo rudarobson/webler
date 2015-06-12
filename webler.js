@@ -4,7 +4,6 @@ var path = require('path');
 var fs = require('fs');
 var wfs = wRequire('wfs');
 var webled = [];
-var bundler = wPackage('bundle');
 function deleteFolder(folder) {
     var files = [];
     if (fs.existsSync(folder)) {
@@ -53,57 +52,134 @@ function addSassImporter(cwd, bundler) {
         return res;
     });
 }
+function addJavascriptImporter(srcCwd, bundler) {
+    bundler.addScriptsFileSolver('javascript', function (pattern) {
+        var files = globule.find(pattern, {
+            cwd: srcCwd,
+            filter: 'isFile'
+        });
+        var res = [];
+        for (var i in files) {
+            res.push({
+                map: undefined,
+                result: Webler.wFile(srcCwd, files[i])
+            });
+        }
+        return res;
+    });
+}
+var defaultGOptions = {
+    tmpDir: '.webler',
+    production: false,
+    ignoreFiles: []
+};
+var bundler = wPackage('bundle');
+var modules = {
+    razor: wPackage('razor'),
+    components: wPackage('components'),
+    bundle: bundler,
+    javascript: {
+        start: function (config) {
+            addJavascriptImporter(config.glob.cwd, bundler);
+        }
+    },
+    css: {
+        start: function (config) {
+            addCssImporter(config.glob.cwd, bundler);
+        }
+    },
+    sass: {
+        start: function (config) {
+            var files = config.glob.src;
+            var cwd = config.glob.cwd;
+            var destCwd = config.glob.dest;
+            var sass = require('node-sass');
+            addSassImporter(destCwd, bundler);
+            var allF = globule.find(files, {
+                cwd: cwd,
+                filter: 'isFile'
+            });
+            for (var i in allF) {
+                var file = allF[i];
+                var render = sass.renderSync({
+                    file: path.join(cwd, file),
+                    outFile: path.join(destCwd, file),
+                    sourceMap: true
+                });
+                var destFile = path.join(destCwd, file).replace('.scss', '.css');
+                wfs.safeWriteFile(path.join(destCwd, file), fs.readFileSync(path.join(cwd, file))); //copy source file
+                wfs.safeWriteFile(destFile, render.css);
+                wfs.safeWriteFile(destFile + '.map', render.map);
+            }
+        }
+    }
+};
+var tmpDeleted = false;
 module.exports = {
-    css: function (pattern, cwd) {
-        addCssImporter(cwd, bundler);
-    },
-    sass: function (pattern, cwd, destCwd) {
-        var sass = require('node-sass');
-        addSassImporter(destCwd, bundler);
-        var files = globule.find(pattern, {
-            cwd: cwd,
-            filter: 'isFile'
-        });
-        for (var i in files) {
-            var file = files[i];
-            var render = sass.renderSync({
-                file: path.join(cwd, file),
-                outFile: path.join(destCwd, file),
-                sourceMap: true
+    weble: function (config) {
+        var gOptions = {};
+        for (var i in defaultGOptions)
+            gOptions[i] = defaultGOptions[i];
+        for (var i in config.options)
+            gOptions[i] = config.options[i];
+        if (!tmpDeleted) {
+            tmpDeleted = true;
+            deleteFolder(gOptions.tmpDir);
+        }
+        for (var m in config.modules) {
+            var module = config.modules[m];
+            if (!module.cwd)
+                module.cwd = './';
+            if (!module.destCwd) {
+                console.log('destCwd not specified for module: ' + m);
+                process.exit(-1);
+                throw '';
+            }
+            var globs = [];
+            if (Array.isArray(module.srcs)) {
+                for (var i in module.srcs)
+                    globs.push(module.srcs[i]);
+            }
+            else
+                globs.push(module.srcs);
+            for (var i in gOptions.ignoreFiles)
+                globs.push('!' + gOptions.ignoreFiles[i]);
+            var allF = globule.find(globs, {
+                cwd: module.cwd,
+                filter: 'isFile'
             });
-            var destFile = path.join(destCwd, file).replace('.scss', '.css');
-            wfs.safeWriteFile(path.join(destCwd, file), fs.readFileSync(path.join(cwd, file))); //copy source file
-            wfs.safeWriteFile(destFile, render.css);
-            wfs.safeWriteFile(destFile + '.map', render.map);
-        }
-    },
-    html: function (pattern, cwd, destCwd, tmpDir, isProduction) {
-        if (tmpDir === void 0) { tmpDir = '.tmp'; }
-        if (isProduction === void 0) { isProduction = false; }
-        var weble = {};
-        var files = globule.find(pattern, {
-            cwd: cwd,
-            filter: 'isFile'
-        });
-        var wFiles = [];
-        for (var i in files) {
-            wFiles.push(Webler.wFile(cwd, files[i]));
-        }
-        wPackage('razor').start(wFiles, path.join(tmpDir, 'razor'), {
-            appSrcRoot: cwd,
-            tmpDir: tmpDir
-        });
-        for (var i in wFiles) {
-            wPackage('components').start(wFiles[i], path.join(tmpDir, 'components'), {
-                componentsPath: path.join(cwd, '_webler/components')
+            var wFiles = [];
+            for (var f in allF) {
+                wFiles.push(Webler.wFile(module.cwd, allF[f]));
+            }
+            var lastTempFolder;
+            var foldersToDelete = [];
+            for (var j in module.packages) {
+                var packageOptions = module.packages[j];
+                var moduleName = j;
+                console.log('Running ' + moduleName + '...');
+                var folder = path.join(gOptions.tmpDir, j);
+                foldersToDelete.push(folder);
+                lastTempFolder = folder;
+                modules[moduleName].start({
+                    files: wFiles,
+                    glob: {
+                        src: module.srcs,
+                        cwd: module.cwd,
+                        dest: module.destCwd
+                    },
+                    destCwd: folder,
+                    gOptions: gOptions,
+                    options: packageOptions
+                });
+            }
+            allF = globule.find('**/*.*', {
+                cwd: lastTempFolder,
+                filter: 'isFile'
             });
+            for (var k in allF) {
+                wfs.safeWriteFile(path.join(module.destCwd, allF[k]), fs.readFileSync(path.join(lastTempFolder, allF[k])));
+            }
         }
-        deleteFolder(path.join(tmpDir, 'razor'));
-        for (var i in wFiles) {
-            bundler.start(wFiles[i], destCwd, {
-                isProduction: isProduction
-            });
-        }
-        deleteFolder(path.join(tmpDir, 'components'));
     }
 };

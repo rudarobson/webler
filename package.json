@@ -3,13 +3,17 @@
   "description": "Web application assembler",
   "version": "0.0.1005",
   "main": "webler.js",
+  "bin":{
+    "weble":"bin/weble"
+  },
   "dependencies": {
     "clean-css": "^3.3.1",
     "globule": "^0.2.0",
     "grunt": "^0.4.5",
     "mkdirp": "^0.5.1",
     "node-sass": "^3.1.2",
-    "uglify-js": "^2.4.23"
+    "uglify-js": "^2.4.23",
+    "yargs": "^3.10.0"
   },
   "devDependencies": {},
   "preferGlobal": true,

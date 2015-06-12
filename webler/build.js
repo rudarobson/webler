@@ -7,6 +7,9 @@ var mkdirp = require('mkdirp');
 
 var srcFolder = './';
 var destFolder = '../';
+var filesToCopy = [
+  'bin/weble'
+];
 
 function deleteFolder(folder) {
   var files = [];
@@ -67,4 +70,8 @@ var jsfiles = glob.find('**/*.json', {
 
 for (var i in jsfiles) {
   safeWriteFile(path.join(destFolder, jsfiles[i]), fs.readFileSync(path.join(srcFolder, jsfiles[i])));
+}
+
+for(var i in filesToCopy){
+  safeWriteFile(path.join(destFolder, filesToCopy[i]), fs.readFileSync(path.join(srcFolder, filesToCopy[i])));
 }

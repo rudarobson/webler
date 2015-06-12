@@ -11,7 +11,12 @@ function changeFileExt(fileName, ext) {
 }
 
 export = {
-  start: function(files: Webler.WFile[], destDir: string, options: RazorConfig) {
+  start: function(config:Webler.WeblePackageOptions) {
+    var files: Webler.WFile[] = config.files;
+    var destCwd: string = config.destCwd;
+    var gOptions = config.gOptions;
+    var options: RazorConfig = config.options;
+
     var defaultOptions = {
       layoutsPath: 'layouts',
       modelsPath: 'models',
@@ -29,15 +34,16 @@ export = {
 
     if (!options.appSrcRoot)
       throw 'appSrcRoot option missing in razor';
-    if (!options.tmpDir)
-      throw 'tmpDir missing in razor';
 
-    var tmpDir = options.tmpDir;
+    var tmpDir = gOptions.tmpDir;
 
     var pages = [];
     var viewStarts = [];
 
     for (var i in files) {
+      if (files[i].cwd() !== options.appSrcRoot) {
+        console.log('Razor: file not in appSrcRoot Directory:' + files[i].fullPath())
+      }
       var file = files[i];
       if (path.basename(file.src()) === '_ViewStart.cshtml') {
         viewStarts.unshift(i); //must be in reverse order
@@ -48,12 +54,12 @@ export = {
       pages.push({
         source: file.fullPath(),
         originalSource: file.fullPath(),
-        destination: path.join(destDir, file.src()),
+        destination: path.join(destCwd, file.src()),
         model: noExtName + '.model.json',
         viewBag: noExtName + '.viewbag.json'
       });
 
-      file.setCWD(destDir);
+      file.setCWD(destCwd);
     }
 
     while (viewStarts.length > 0) //view starts are in reverse order

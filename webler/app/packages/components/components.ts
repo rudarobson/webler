@@ -233,24 +233,29 @@ var defaultsOptions: Components.ComponentsOptions = {
 };
 
 export = {
-  start: function(input: Webler.WFile, destDir: string, options: Components.ComponentsOptions) {
-    var opt: Components.ComponentsOptions = <any>{};
+  start: function(config: Webler.WeblePackageOptions) {
+    var srcsFile: Webler.WFile[] = config.files;
+    var destCwd: string = config.destCwd;
+    var options: Components.ComponentsOptions = config.options;
 
-    for (var i in defaultsOptions)
-      opt[i] = defaultsOptions[i];
-    for (var i in options)
-      opt[i] = options[i];
+    srcsFile.forEach(function(input) {
+      var opt: Components.ComponentsOptions = <any>{};
 
-    var $: Dom.$Static = wRequire('$');
+      for (var i in defaultsOptions)
+        opt[i] = defaultsOptions[i];
+      for (var i in options)
+        opt[i] = options[i];
 
-    var dom = $.parse(fs.readFileSync(input.fullPath()).toString())
+      var $: Dom.$Static = wRequire('$');
 
-    var markupType = $.markupTypes;
+      var dom = $.parse(fs.readFileSync(input.fullPath()).toString())
+
+      var markupType = $.markupTypes;
 
 
-    _parse($, input.fullPath(), markupType, $(dom), opt, {});
-    input.setCWD(destDir);
-    wfs.safeWriteFile(input.fullPath(), dom.serialize());
-    return input;
+      _parse($, input.fullPath(), markupType, $(dom), opt, {});
+      input.setCWD(destCwd);
+      wfs.safeWriteFile(input.fullPath(), dom.serialize());
+    });
   }
 };

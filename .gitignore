@@ -6,3 +6,4 @@ node_modules
 /weble-task
 webler/tsconfig.json
 /webler.js
+/bin
