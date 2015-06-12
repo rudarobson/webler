@@ -236,14 +236,14 @@ export = <Bundle.Bundler> {
 
 
       //imags do not need comments
-      $(dom).filter('img').each(function() {
+      /*$(dom).filter('img').each(function() {
         var filesResult = typeFileSolvers.img['img']([this.getAttribute('src')]);
 
         wfs.safeWriteFile(
           path.join(destCwd, this.getAttribute('src')),
           fs.readFileSync(filesResult[0].result.fullPath())
           );
-      });
+      });*/
 
       wfs.safeWriteFile(path.join(destCwd, srcFile.src()), dom.serialize());
       srcFile.setCWD(destCwd);
