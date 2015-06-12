@@ -8,7 +8,8 @@ var mkdirp = require('mkdirp');
 var srcFolder = './';
 var destFolder = '../';
 var filesToCopy = [
-  'bin/weble'
+  'bin/weble',
+  'bin/webler'
 ];
 
 function deleteFolder(folder) {

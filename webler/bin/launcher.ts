@@ -1,6 +1,7 @@
 require('../app/core/bootstrap');
 var fs = require('fs');
 var path = require('path');
+
 function weble(opt: Webler.CommandLine.WebleOptions) {
   var globule = wRequire('globule');
 
@@ -11,7 +12,11 @@ function weble(opt: Webler.CommandLine.WebleOptions) {
     console.log('webler config file not found');
 }
 
+function server(opt: Webler.CommandLine.ServerOptions) {
+  require('../app/core/server/launch-server').launch(opt);
+}
 
 export = {
-  weble: weble
+  weble: weble,
+  server:server
 }

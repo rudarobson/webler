@@ -1,0 +1,28 @@
+#! /usr/bin/env node
+
+var yargs = require('yargs')
+  .usage('Usage: weble --production')
+  .help('h')
+  .alias('h', 'help');
+
+
+var argv = yargs.argv;
+
+if (argv.help) {
+  console.log(yargs.help());
+}
+
+var command = argv._[0];
+var launcher = require('./launcher');
+
+switch (command) {
+  case 'server':
+    var dir = argv._[1];
+    delete argv._;
+    argv.root = dir;
+    launcher.server(argv);
+    break;
+  case 'weble':
+    launcher.weble(argv);
+    break;
+}
