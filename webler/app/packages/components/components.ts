@@ -15,6 +15,7 @@ function DefaultImporter(importing: string, options: Components.ComponentsOption
 
 
   try {
+    console.log(dir)
     isDirectory = fs.lstatSync(dir).isDirectory();
   } catch (e) {
 
@@ -151,7 +152,7 @@ function _parseConfiguraion(currentSrcPath, markupType, $root, options: Componen
 
           var dir;
           if (match[0][0] == '#') {
-            results = DefaultImporter(cmpPath, options, currentSrcPath, alias);
+            results = DefaultImporter(cmpPath, options,path.dirname(currentSrcPath), alias);
           } else {
             results = DefaultImporter(cmpPath, options, null, alias);
           }
