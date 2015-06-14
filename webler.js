@@ -122,15 +122,18 @@ var modules = {
             });
             for (var i in allF) {
                 var file = allF[i];
+                wfs.safeWriteFile(path.join(destCwd, file), fs.readFileSync(path.join(cwd, file))); //copy source file
+                if (path.basename(file)[0] == '_')
+                    continue;
                 var opt = {}; //need to copy multiple times
                 for (var i in options)
                     opt[i] = options[i];
                 opt.file = path.join(cwd, file);
                 opt.outFile = path.join(destCwd, file);
                 opt.sourceMap = true;
+                console.log('\t' + opt.file);
                 var render = sass.renderSync(opt);
                 var destFile = path.join(destCwd, file).replace('.scss', '.css');
-                wfs.safeWriteFile(path.join(destCwd, file), fs.readFileSync(path.join(cwd, file))); //copy source file
                 wfs.safeWriteFile(destFile, render.css);
                 wfs.safeWriteFile(destFile + '.map', render.map);
             }
