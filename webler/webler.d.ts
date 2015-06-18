@@ -7,7 +7,7 @@ declare module Webler {
 
   interface WeblePackageOptions {
     files: Webler.WFile[];
-    additionalFiles:Webler.WFile[];
+    additionalFiles: Webler.WFile[];
     destCwd: string;
     options: any;
     gOptions: GOptions;
@@ -19,13 +19,21 @@ declare module Webler {
   }
 
   interface WebleOptions {
-    options: GOptions,
+    options: GOptions;
+    chainModules: {
+      [moduleName: string]: {
+        srcs: string[],
+        cwd: string,
+        destCwd: string,
+        options: { [packageName: string]: any }
+      }
+    };
     modules: {
       [moduleName: string]: {
         srcs: string[],
         cwd: string,
         destCwd: string,
-        packages: { [packageName: string]: any }
+        options: any
       }
     };
   }

@@ -140,6 +140,49 @@ var modules = {
         }
     }
 };
+function getFiles(cwd, srcs, ignoreFiles) {
+    var globs = [];
+    if (Array.isArray(srcs)) {
+        for (var i in srcs)
+            globs.push(srcs[i]);
+    }
+    else
+        globs.push(srcs);
+    for (var i in ignoreFiles)
+        globs.push('!' + ignoreFiles[i]);
+    var allF = globule.find(globs, {
+        cwd: cwd,
+        filter: 'isFile'
+    });
+    var wFiles = [];
+    for (var f in allF) {
+        wFiles.push(Webler.wFile(cwd, allF[f]));
+    }
+    return wFiles;
+}
+function executeModule(moduleName, srcs, cwd, destCwd, wFiles, additionalFiles, packageOptions, gOptions) {
+    console.log('Running ' + moduleName + '...');
+    modules[moduleName].start({
+        files: wFiles,
+        additionalFiles: additionalFiles,
+        glob: {
+            src: srcs,
+            cwd: cwd,
+            dest: destCwd
+        },
+        destCwd: path.join(gOptions.tmpDir, moduleName),
+        gOptions: gOptions,
+        options: packageOptions
+    });
+}
+function writeFiles(wFiles, additionalFiles, destCwd) {
+    for (var k in wFiles) {
+        wfs.safeWriteFile(path.join(destCwd, wFiles[k].src()), fs.readFileSync(wFiles[k].fullPath()));
+    }
+    for (var k in additionalFiles) {
+        wfs.safeWriteFile(path.join(destCwd, additionalFiles[k].src()), fs.readFileSync(additionalFiles[k].fullPath()));
+    }
+}
 var tmpDeleted = false;
 module.exports = {
     weble: function (config) {
@@ -153,60 +196,37 @@ module.exports = {
             deleteFolder(gOptions.tmpDir);
         }
         for (var m in config.modules) {
-            var module = config.modules[m];
-            if (!module.cwd)
-                module.cwd = './';
+            var package = config.modules[m];
+            var cwd;
+            var destCwd;
+            if (!package.destCwd) {
+                console.log('destCwd not specified for module: ' + m);
+                process.exit(-1);
+                throw '';
+            }
+            destCwd = package.destCwd;
+            cwd = package.cwd || './';
+            var wFiles = getFiles(cwd, package.srcs, gOptions.ignoreFiles);
+            executeModule(m, package.srcs, cwd, destCwd, wFiles, additionalFiles, package.options, gOptions);
+        }
+        for (var m in config.chainModules) {
+            var module = config.chainModules[m];
+            var cwd;
+            var destCwd;
             if (!module.destCwd) {
                 console.log('destCwd not specified for module: ' + m);
                 process.exit(-1);
                 throw '';
             }
-            var globs = [];
-            if (Array.isArray(module.srcs)) {
-                for (var i in module.srcs)
-                    globs.push(module.srcs[i]);
-            }
-            else
-                globs.push(module.srcs);
-            for (var i in gOptions.ignoreFiles)
-                globs.push('!' + gOptions.ignoreFiles[i]);
-            var allF = globule.find(globs, {
-                cwd: module.cwd,
-                filter: 'isFile'
-            });
-            var wFiles = [];
-            for (var f in allF) {
-                wFiles.push(Webler.wFile(module.cwd, allF[f]));
-            }
-            var lastTempFolder;
+            destCwd = module.destCwd;
+            cwd = module.cwd || './';
+            var wFiles = getFiles(cwd, module.srcs, gOptions.ignoreFiles);
             var foldersToDelete = [];
             var additionalFiles = [];
-            for (var j in module.packages) {
-                var packageOptions = module.packages[j];
-                var moduleName = j;
-                console.log('Running ' + moduleName + '...');
-                var folder = path.join(gOptions.tmpDir, j);
-                foldersToDelete.push(folder);
-                lastTempFolder = folder;
-                modules[moduleName].start({
-                    files: wFiles,
-                    additionalFiles: additionalFiles,
-                    glob: {
-                        src: module.srcs,
-                        cwd: module.cwd,
-                        dest: module.destCwd
-                    },
-                    destCwd: folder,
-                    gOptions: gOptions,
-                    options: packageOptions
-                });
+            for (var j in module.options) {
+                executeModule(j, module.srcs, cwd, destCwd, wFiles, additionalFiles, module.options[j], gOptions);
             }
-            for (var k in wFiles) {
-                wfs.safeWriteFile(path.join(module.destCwd, wFiles[k].src()), fs.readFileSync(wFiles[k].fullPath()));
-            }
-            for (var k in additionalFiles) {
-                wfs.safeWriteFile(path.join(module.destCwd, additionalFiles[k].src()), fs.readFileSync(additionalFiles[k].fullPath()));
-            }
+            writeFiles(wFiles, additionalFiles, destCwd);
         }
     }
 };

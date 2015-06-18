@@ -85,7 +85,7 @@ export = <Bundle.Bundler> {
       var dom: Dom.Document = $.parse(fs.readFileSync(srcFile.fullPath()).toString());
 
       var comments = $.findBlockComments(dom, 'bundle:', '/bundle');
-      var regex = /<!--\s*bundle:\s*([\s\S]+)-->/;
+      var regex = /<!--\s*bundle:\s*([\s\S].*?)\s*-->/;
       var bundles: BundleMap = {
         styles: {},
         scripts: {},
@@ -101,11 +101,11 @@ export = <Bundle.Bundler> {
         var bundleType;
         var setAttrs = <any> {};
         var fileExt;
-        var dest = match[1];
+        var dest = match[1].trim();
 
         var allFiles: Bundle.FileMapResult[][] = [];
         var commonTagName = undefined;
-        var firstElementChild: Dom.Element;
+        var firstElementChild: Dom.Element = undefined;
 
         for (var j in comments[i].children) {
 
