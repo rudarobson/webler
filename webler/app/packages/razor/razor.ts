@@ -41,7 +41,7 @@ export = {
     var viewStarts = [];
 
     for (var i in files) {
-      if (files[i].cwd() !== options.appSrcRoot) {
+      if (files[i].cwd().indexOf(options.appSrcRoot) != 0) {
         console.log('Razor: file not in appSrcRoot Directory:' + files[i].fullPath())
       }
       var file = files[i];
