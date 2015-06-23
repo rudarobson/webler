@@ -18,10 +18,12 @@ function watch(argv) {
 
 function init(argv) {
   var wfs = wRequire('wfs');
-  wfs.safeWriteFile('weble.js', fs.readFileSync(path.join(path.dirname(require.resolve('./launcher')), 'init', 'weble.js')));
-  var mkdirp = require('mkdirp');
-  mkdirp.sync(path.join('src','_webler','components'));
-  mkdirp.sync(path.join('src','_webler','layouts'));
+  if(!fs.existsSync('weble.js')){
+    wfs.safeWriteFile('weble.js', fs.readFileSync(path.join(path.dirname(require.resolve('./launcher')), 'init', 'weble.js')));
+    var mkdirp = require('mkdirp');
+    mkdirp.sync(path.join('src','_webler','components'));
+    mkdirp.sync(path.join('src','_webler','layouts'));
+  }
 }
 
 export = {

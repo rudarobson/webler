@@ -31,7 +31,8 @@ module.exports = {
       destCwd: 'dest',
       options: {
         razor: {
-          appSrcRoot: 'src'
+          appSrcRoot: 'src',
+          layoutsPath: 'src/_webler/layouts'
         },
         components: {
           componentsPath: 'src/_webler/components'
