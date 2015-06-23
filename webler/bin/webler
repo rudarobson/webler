@@ -22,4 +22,9 @@ switch (command) {
   case 'weble':
     launcher.weble(argv);
     break;
+  case 'init':
+    launcher.init();
+    break;
+  default:
+    console.log('command: ' + command + ' not found');
 }

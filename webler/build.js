@@ -9,7 +9,8 @@ var srcFolder = './';
 var destFolder = '../';
 var filesToCopy = [
   'bin/weble',
-  'bin/webler'
+  'bin/webler',
+  'bin/init/weble.js'
 ];
 
 function deleteFolder(folder) {

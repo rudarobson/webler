@@ -16,7 +16,16 @@ function watch(argv) {
   require('./watch')(argv);
 }
 
+function init(argv) {
+  var wfs = wRequire('wfs');
+  wfs.safeWriteFile('weble.js', fs.readFileSync(path.join(path.dirname(require.resolve('./launcher')), 'init', 'weble.js')));
+  var mkdirp = require('mkdirp');
+  mkdirp.sync(path.join('src','_webler','components'));
+  mkdirp.sync(path.join('src','_webler','layouts'));
+}
+
 export = {
   weble: weble,
-  watch: watch
+  watch: watch,
+  init: init
 }
