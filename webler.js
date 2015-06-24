@@ -80,6 +80,14 @@ var modules = {
     bundle: bundler,
     copy: {
         start: function (config) {
+            for (var i in config.files) {
+                var file = config.files[i];
+                config.additionalFiles.push(file);
+            }
+        }
+    },
+    domcopy: {
+        start: function (config) {
             var $ = wRequire('$');
             for (var i in config.files) {
                 var dom = $.parse(fs.readFileSync(config.files[i].fullPath()).toString());
@@ -195,6 +203,7 @@ module.exports = {
             tmpDeleted = true;
             deleteFolder(gOptions.tmpDir);
         }
+        var additionalFiles = [];
         for (var m in config.modules) {
             var package = config.modules[m];
             var cwd;
@@ -222,7 +231,6 @@ module.exports = {
             cwd = module.cwd || './';
             var wFiles = getFiles(cwd, module.srcs, gOptions.ignoreFiles);
             var foldersToDelete = [];
-            var additionalFiles = [];
             for (var j in module.options) {
                 executeModule(j, module.srcs, cwd, destCwd, wFiles, additionalFiles, module.options[j], gOptions);
             }

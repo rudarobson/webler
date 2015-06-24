@@ -102,6 +102,14 @@ var modules = {
   bundle: bundler,
   copy: {
     start: function(config: Webler.WeblePackageOptions) {
+      for (var i in config.files) {
+        var file = config.files[i];
+        config.additionalFiles.push(file);
+      }
+    }
+  },
+  domcopy: {
+    start: function(config: Webler.WeblePackageOptions) {
       var $ = wRequire('$');
 
       for (var i in config.files) {
@@ -247,6 +255,8 @@ export = {
       deleteFolder(gOptions.tmpDir);
     }
 
+    var additionalFiles: Webler.WFile[] = [];
+
     for (var m in config.modules) {
       var package = config.modules[m];
       var cwd;
@@ -282,7 +292,7 @@ export = {
       var wFiles: Webler.WFile[] = getFiles(cwd, module.srcs, gOptions.ignoreFiles);
 
       var foldersToDelete = [];
-      var additionalFiles: Webler.WFile[] = [];
+
 
       for (var j in module.options) {
         executeModule(j,

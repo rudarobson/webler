@@ -38,7 +38,7 @@ module.exports = {
           componentsPath: 'src/_webler/components'
         },
         bundle: {},
-        copy: {}
+        domcopy: {}
       }
     }
   }
