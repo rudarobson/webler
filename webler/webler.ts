@@ -231,12 +231,9 @@ function executeModule(moduleName,
   });
 }
 
-function writeFiles(wFiles: Webler.WFile[], additionalFiles: Webler.WFile[], destCwd: string) {
-  for (var k in wFiles) {
-    wfs.safeWriteFile(path.join(destCwd, wFiles[k].src()), fs.readFileSync(wFiles[k].fullPath()));
-  }
-  for (var k in additionalFiles) {
-    wfs.safeWriteFile(path.join(destCwd, additionalFiles[k].src()), fs.readFileSync(additionalFiles[k].fullPath()));
+function writeFiles(files: Webler.WFile[], destCwd: string) {
+  for (var k in files) {
+    wfs.safeWriteFile(path.join(destCwd,files[k].src()), fs.readFileSync(files[k].fullPath()));
   }
 }
 var tmpDeleted = false;
@@ -275,7 +272,10 @@ export = {
         package.srcs, cwd, destCwd,
         wFiles, additionalFiles,
         package.options, gOptions);
+      writeFiles(additionalFiles, destCwd);
+      additionalFiles = [];
     }
+
 
     for (var m in config.chainModules) {
       var module = config.chainModules[m];
@@ -301,7 +301,10 @@ export = {
           module.options[j], gOptions);
       }
 
-      writeFiles(wFiles, additionalFiles, destCwd);
+      writeFiles(wFiles, destCwd);
+      writeFiles(additionalFiles, destCwd);
+      additionalFiles = [];
     }
+
   }
 }
